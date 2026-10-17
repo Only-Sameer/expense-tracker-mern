@@ -1,6 +1,7 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api } from './api.js';
+import { Header } from './components/BudgetryUI.jsx';
 import { useScrollProgress, useTheme } from './hooks.js';
 
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
@@ -12,17 +13,11 @@ export default function App() {
   const [theme, toggleTheme] = useTheme();
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [cookieChoice, setCookieChoice] = useState(() => {
     try { return JSON.parse(localStorage.getItem('expense-cookie-consent') || 'null'); } catch { return null; }
   });
   const [cookieSettings, setCookieSettings] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [showBackTop, setShowBackTop] = useState(false);
-  const [search, setSearch] = useState('');
-  const menuRef = useRef(null);
-  const location = useLocation();
   const navigate = useNavigate();
   const progress = useScrollProgress();
 
@@ -36,54 +31,15 @@ export default function App() {
     onScroll();
     return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
   }, []);
-  useEffect(() => { setMobileOpen(false); setSearchOpen(false); setProfileOpen(false); }, [location.pathname]);
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const prior = document.activeElement;
-    const oldOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const focusables = () => menuRef.current?.querySelectorAll('a,button,input,[tabindex="0"]') || [];
-    const first = () => focusables()[0]?.focus();
-    first();
-    function keydown(event) {
-      if (event.key === 'Escape') { setMobileOpen(false); prior?.focus?.(); }
-      if (event.key === 'Tab') {
-        const items = [...focusables()];
-        if (!items.length) return;
-        if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1).focus(); }
-        else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
-      }
-    }
-    function outside(event) { if (menuRef.current && !menuRef.current.contains(event.target) && !event.target.closest('.menu-toggle')) setMobileOpen(false); }
-    document.addEventListener('keydown', keydown);
-    document.addEventListener('pointerdown', outside);
-    return () => { document.body.style.overflow = oldOverflow; document.removeEventListener('keydown', keydown); document.removeEventListener('pointerdown', outside); };
-  }, [mobileOpen]);
   const saveConsent = choice => {
     const record = { choice, timestamp: new Date().toISOString(), policyVersion: '2026-10-17' };
     try { localStorage.setItem('expense-cookie-consent', JSON.stringify(record)); } catch { /* App still works without storage. */ }
     setCookieChoice(record); setCookieSettings(false);
   };
   async function logout() { try { await api('/auth/logout', { method: 'POST' }); } finally { setUser(null); navigate('/'); } }
-  const runSearch = event => {
-    event.preventDefault();
-    const q = search.trim();
-    if (q) navigate(user ? `/?search=${encodeURIComponent(q)}` : `/login?search=${encodeURIComponent(q)}`);
-    setSearchOpen(false);
-  };
   return <>
     <div className="scroll-progress" aria-hidden="true" style={{ transform: `scaleX(${progress / 100})` }} />
-    <header className="site-header">
-      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.webp" alt="Budgetry" className="brand-logo" /><span className="sr-only">Know where your money goes.</span></Link>
-      <div className="header-tagline">Know where your money goes.</div>
-      <div className="header-actions">
-        <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} aria-pressed={theme === 'dark'}>{theme === 'dark' ? '☀' : '☾'}</button>
-        {user ? <div className="profile-menu-wrap">
-          <button type="button" className="profile-avatar-button" onClick={() => setProfileOpen(value => !value)} aria-label="Open account menu" aria-expanded={profileOpen}><span className="avatar">{(user.name || 'B').slice(0,1).toUpperCase()}</span><span className="profile-name-short">{user.name?.split(' ')[0] || 'Account'}</span><span aria-hidden="true">⌄</span></button>
-          {profileOpen && <div className="profile-dropdown" role="menu"><div className="profile-dropdown-user"><strong>{user.name}</strong><span>{user.email}</span></div>{user.isAdmin && <Link role="menuitem" to="/admin" onClick={() => setProfileOpen(false)}>Admin console</Link>}<button type="button" role="menuitem" onClick={() => { setProfileOpen(false); logout(); }}>Log out</button></div>}
-        </div> : <Link className="button button-primary header-signin" to="/login">Sign in</Link>}
-      </div>
-    </header>
+    <Header user={user} theme={theme} onThemeToggle={toggleTheme} onLogout={logout} />
     <main id="main" tabIndex="-1">
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>

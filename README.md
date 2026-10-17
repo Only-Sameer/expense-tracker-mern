@@ -40,3 +40,36 @@ See `docs/ARCHITECTURE.md` and `docs/REQUIREMENTS.md`.
 ## Branding and legal pages
 
 The web client is branded as Budgetry. Privacy, terms, and cookie information show the latest revision date, operator name, and contact email. They are plain-language product notices, not a substitute for jurisdiction-specific legal advice. Have qualified Indian counsel review them before commercial use or broader public launch.
+
+## Budgetry dashboard structure
+
+The dashboard is implemented with reusable React components and a small shared finance utility module:
+
+```text
+client/src/
+  components/
+    BudgetryUI.jsx       # Header, Sidebar, StatCard, forms, tables, charts, empty states, SettingsPage
+  lib/
+    finance.js           # INR formatting, category metadata, dates, CSV parsing, demo data
+  pages/
+    Dashboard.jsx        # Dashboard state, API integration, filtering, pagination and view navigation
+    Auth.jsx
+    Legal.jsx
+    Admin.jsx
+  styles.css             # Theme tokens, responsive dashboard layout, reduced-motion rules
+```
+
+### Dashboard behaviour
+
+- React and Recharts remain the core frontend stack. The existing custom CSS is retained rather than adding Tailwind and introducing a second styling system during the redesign.
+- The monthly category budgets and recurring-expense list are saved in browser local storage. Expense records, exports, and account deletion continue to use the authenticated server API.
+- Demo mode creates 60 sample transactions in browser memory and does not write them to the signed-in account.
+- CSV import accepts `Date`, `Amount`, and `Category` headers, with an optional `Note` column, and imports up to 250 rows per file.
+
+### Run locally
+
+1. Install Node.js 20.19+ (or 22.12+) and MongoDB or configure a hosted MongoDB URI.
+2. Copy `server/.env.example` to `server/.env` and configure `MONGODB_URI`, `JWT_SECRET`, and `CLIENT_ORIGIN`.
+3. From the repository root, run `npm install`.
+4. In separate terminals, run `npm run dev:server` and `npm run dev:client`.
+5. Open `http://localhost:5173`. To verify the frontend production bundle, run `npm run build`; to run the API validation tests, run `npm test`.
