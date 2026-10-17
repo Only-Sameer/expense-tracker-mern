@@ -133,9 +133,9 @@ export default function Dashboard({ user, setUser, onThemeToggle, theme }) {
     setToast('Custom category added.');
   }
   async function updateCustomCategory(oldName, patch){
-    const name=String(patch.name??oldName).trim().replace(/\\s+/g,' ');
+    const name=String(patch.name??oldName).trim().replace(/\s+/g,' ');
     const color=patch.color||customCategories.find(item=>item.name===oldName)?.color||'#64748B';
-    if(!name||name.length>40||!/^[\\p{L}\\p{N} '&\\/-]+$/u.test(name)){setToast('That category name is not valid.');return;}
+    if(!name||name.length>40||!/^[\p{L}\p{N} '&\/-]+$/u.test(name)){setToast('That category name is not valid.');return;}
     if(name.toLowerCase()!==oldName.toLowerCase()&&allCategories.some(item=>item.toLowerCase()===name.toLowerCase())){setToast('A category with that name already exists.');return;}
     try{
       if(name!==oldName){
