@@ -120,8 +120,9 @@ export function filterExpenseRecords(items = [], options = {}) {
   const sort = options.sort || 'date_desc';
   return items.filter(item => {
     const itemCategory = displayCategory(item.category);
+    const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : '';
     if (query && !String(item.note || '').toLowerCase().includes(query) &&
-        !itemCategory.toLowerCase().includes(query)) return false;
+        !itemCategory.toLowerCase().includes(query) && !tags.includes(query)) return false;
     if (category !== 'All' && itemCategory !== category) return false;
     const date = dayKey(item);
     if (from && date < from) return false;
@@ -134,4 +135,49 @@ export function filterExpenseRecords(items = [], options = {}) {
       ? new Date(a.date) - new Date(b.date)
       : new Date(b.date) - new Date(a.date);
   });
+}
+
+
+/**
+ * Parse a concise quick entry such as "250 coffee yesterday".
+ * This is a deliberately small grammar; users review and edit parsed values before saving.
+ */
+export function parseQuickAdd(input, now = new Date()) {
+  const raw = String(input || '').trim();
+  const match = raw.match(/^(?:₹\s*)?((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?)\s+(.+)$/);
+  if (!match) return { error: 'Start with an amount, for example: 250 coffee yesterday.' };
+  const amount = Number(match[1].replace(/,/g, ''));
+  if (!Number.isFinite(amount) || amount <= 0) return { error: 'Enter an amount greater than zero.' };
+
+  let remainder = match[2].trim();
+  let date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dateMatch = remainder.match(/\s+(today|yesterday|tomorrow|last night)$/i);
+  if (dateMatch) {
+    const keyword = dateMatch[1].toLowerCase();
+    date.setDate(date.getDate() + (keyword === 'yesterday' || keyword === 'last night' ? -1 : keyword === 'tomorrow' ? 1 : 0));
+    remainder = remainder.slice(0, dateMatch.index).trim();
+  } else {
+    const explicit = remainder.match(/\s+(\d{4}-\d{2}-\d{2})$/);
+    if (explicit) {
+      const candidate = explicit[1];
+      const parsed = new Date(candidate + 'T12:00:00');
+      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0,10) !== candidate) {
+        return { error: 'Use a real calendar date in YYYY-MM-DD format.' };
+      }
+      date = parsed;
+      remainder = remainder.slice(0, explicit.index).trim();
+    }
+  }
+  if (!remainder) return { error: 'Add a short description after the amount.' };
+  const note = remainder.slice(0, 300);
+  const lower = note.toLowerCase();
+  const category = /\b(rent|landlord|lease)\b/.test(lower) ? 'Rent'
+    : /\b(bus|metro|train|taxi|cab|uber|fuel|petrol|parking|transport)\b/.test(lower) ? 'Transport'
+    : /\b(electricity|electric|internet|mobile|bill|water bill)\b/.test(lower) ? 'Bills'
+    : /\b(medicine|pharmacy|doctor|clinic|hospital|health)\b/.test(lower) ? 'Health'
+    : /\b(movie|cinema|netflix|spotify|concert|game|entertainment)\b/.test(lower) ? 'Entertainment'
+    : /\b(shoes|shirt|shopping|store|clothes|amazon)\b/.test(lower) ? 'Shopping'
+    : /\b(coffee|food|lunch|dinner|breakfast|snack|grocery|groceries|restaurant|tea)\b/.test(lower) ? 'Food'
+    : 'Other';
+  return { amount, category, date: date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0'), note };
 }

@@ -1,6 +1,6 @@
-# Budgetry — Know where your money goes.
+# Budgetry — Know where your money goes
 
-Budgetry is a responsive, privacy-minded expense tracker built as an interview portfolio project. It helps users record transactions in INR, inspect monthly spending, and organize their budgets.
+Budgetry is a responsive, privacy-minded expense tracker built as a full-stack portfolio project. It helps people record expenses in Indian rupees, understand monthly patterns, and organize budgets.
 
 **Live app:** https://only-sameer-expense-tracker-web.onrender.com  
 **API health:** https://only-sameer-expense-tracker-api.onrender.com/health  
@@ -8,176 +8,185 @@ Budgetry is a responsive, privacy-minded expense tracker built as an interview p
 
 ![Budgetry dashboard preview — illustrative sample data](client/public/dashboard-preview.svg)
 
-Social-share artwork: `client/public/og-image.svg` (1200 × 630).
+Social-share artwork is in client/public/og-image.svg with a 1200 × 630 viewBox. It is SVG artwork, not a captured production screenshot.
 
-## Features
+## Product features
 
-- Email/password signup and sign-in; password hashes use bcrypt.
-- Optional email verification and one-time password reset through Resend. These require `RESEND_API_KEY` and `EMAIL_FROM` in the server environment; without them, the routes return a clear configuration message and legacy signup/sign-in remains enabled.
-- HttpOnly session cookie, origin checks on mutating requests, auth rate limits, server-side Zod validation and user-scoped database queries.
-- Monthly summary cards, annual spending bar chart, category breakdown, insights, search, category/date filters, sort, and pagination.
-- Add/edit expenses with INR amounts, eight core categories, date, notes (maximum 300 characters), and inline validation.
-- CSV and JSON export, CSV import with validation and a preview/confirmation step, and account deletion behind a typed confirmation.
-- Category budgets and custom categories. Budget values and custom-category colours are local to the current browser; a category rename updates matching saved expenses and recurring rules.
-- Recurring rules stored in MongoDB. When a signed-in user loads the dashboard, the API creates due entries at most once per rule per calendar month.
-- Responsive mobile navigation, keyboard shortcuts (`N` to add and `/` to focus search), visible focus styles, reduced-motion support, light/dark themes.
-- Anonymous demo mode loads 60 sample expenses across six months in browser memory. Reset it from the demo banner. It is intentionally **not a shared demo account**: demo edits/imports/deletes are not sent to the API and cannot change another visitor's data.
+- Public landing page with Try demo and Sign up actions, product highlights, dashboard preview, privacy details, and a local sample workspace.
+- Anonymous demo mode with 60 realistic sample expenses over six months. Demo changes stay in browser state and do not write to the API or another visitor's records. Reset demo restores the fixtures.
+- Sign up/sign in, optional email verification/password reset through Resend, administrator access controlled by a server-side email allowlist, and protected API routes.
+- Add/edit/delete expense records with INR amount, category, date, 300-character note, up to eight tags, inline validation, a keyboard-friendly dialog, success feedback, and undo for deletion.
+- Quick-add parsing such as “250 coffee yesterday”; parsed values are shown in the expense form before save.
+- Search, category/date range filters, sort, numbered pagination, a responsive desktop table/mobile card list, and keyboard shortcuts (N to add, / to focus search).
+- Four monthly stat cards, year-selectable monthly chart, category donut, spending insight, and a friendly empty state.
+- Category budgets with threshold colours, a monthly budget target, recurring rules for rent/subscriptions/EMIs, and savings goals.
+- Custom categories and colours, CSV import with validation/preview, CSV export including tags, JSON export, and full-data export.
+- First-run setup: currency (the current product is INR-only), monthly budget, and first expense.
+- Settings for appearance, active sessions, log out this device/all devices, account activity, and optional authenticator-app two-factor authentication.
+- Typed DELETE confirmation and password/2FA checks for account deletion; user-scoped server deletion and an audit event.
+- Privacy, Terms, Cookie Policy, cookie preference dialog, canonical/robots/sitemap/social metadata, favicon and web app manifest, keyboard focus styles, reduced-motion support, and a skip-to-content link.
+- Cold-start recovery state, bounded retries for safe GETs, HTML boot-screen fallback, React render-error fallback, and /health plus /api/health endpoints.
+
+### Data storage boundaries
+
+Expense records, recurring rules, user records, sessions, refresh-token hashes and audit events are stored in MongoDB. Category budgets, custom category palettes, onboarding preferences and savings goals are browser-local, namespaced by account on that browser; they do not sync across browsers/devices. Recurring rule definitions and expense records are server-backed. The anonymous demo is browser-only. The app is a portfolio project, not a regulated banking or financial service.
 
 ## Technology
 
-- **Frontend:** React, Vite, React Router, Recharts, custom CSS design tokens.
-- **Backend:** Node.js, Express, Mongoose, MongoDB Atlas, Zod.
-- **Security and operations:** Helmet, CORS, HttpOnly cookies, origin validation, express-rate-limit, hashed expiring auth tokens, GitHub Actions, Render.
-- **No Tailwind migration:** The existing custom CSS system was retained to avoid carrying two styling systems and to keep this incremental redesign lower-risk.
+- **Frontend:** React, Vite, React Router, Recharts, responsive custom CSS design tokens and lazy-loaded charts.
+- **Backend:** Node.js, Express, Mongoose, MongoDB Atlas and Zod.
+- **Security:** bcrypt password hashes, HttpOnly cookies, short-lived access sessions, rotating hashed refresh tokens, token-family reuse detection, Origin checks on unsafe methods, Helmet headers, rate limits/lockouts, server-side validation, TOTP and an admin email allowlist.
+- **Operations:** Render, GitHub Actions, MongoDB Atlas, optional Redis/Upstash, Docker Compose, Nginx and k6.
+- **Optional external services:** Resend email, Cloudflare Turnstile, Google Identity Services and Sentry-compatible diagnostics. They remain inactive when their environment keys are empty. Google Fonts is loaded for the Inter typeface and is disclosed in the privacy notice.
+- **No advertising or behavioural analytics:** the app does not include advertising or behavioural analytics trackers. Optional bot checks, Google sign-in and error diagnostics are separately disclosed in the policies when configured.
+
+The existing React/Vite + Express/MongoDB stack is retained. A full framework/database migration would increase risk without materially improving this app's current product boundaries.
 
 ## Architecture
 
-```mermaid
+### Current hosted topology
+
+~~~mermaid
 flowchart LR
-  V[Visitor / Browser] -->|React app| F[Render static site]
-  F -->|HTTPS JSON + HttpOnly cookie| A[Express API on Render]
-  A -->|Mongoose, user-scoped queries| M[(MongoDB Atlas)]
-  A --> H[/health readiness probe/]
-  G[GitHub Actions every 10 minutes] --> H
-  F --> D[Local-only demo data]
-```
+  B[Browser] --> W[Render static site]
+  W -->|HTTPS API requests + cookies| A[Render Express API]
+  A -->|user-scoped queries| M[(MongoDB Atlas)]
+  A -. optional Redis fast path .-> R[(Redis / Upstash)]
+  G[GitHub Actions health ping] --> H[/health/]
+  H --> A
+  B --> D[Browser-only demo records]
+~~~
 
-## Folder structure
+The deployed services are separate Render hostnames. Therefore production cookie configuration currently uses Secure cookies with SameSite=None. A same-site custom domain can allow SameSite=Lax; test sign-in, refresh and logout in real browsers before changing this.
 
-```text
-client/
-  public/
-    _redirects
-    favicon.svg
-    manifest.webmanifest
-    pwa-icon.svg
-    og-image.svg                 # 1200 × 630 social-card artwork
-    dashboard-preview.svg        # Illustrative landing-page dashboard preview
-  src/
-    components/
-      Header.jsx                 # Header, theme toggle, avatar menu
-      BudgetryUI.jsx             # Sidebar, forms, table, budgets, settings, empty states
-      Charts.jsx                 # Lazy-loaded Recharts charts
-    lib/
-      finance.js                 # Currency, date/filter helpers, CSV, demo fixtures
-      finance.test.js            # Pure helper tests
-    pages/
-      Dashboard.jsx
-      Auth.jsx
-      Recovery.jsx               # Verification and password reset flows
-      Legal.jsx
-      Admin.jsx
-    api.js                       # Bounded safe-request retries
-    hooks.js
-    styles.css
-server/
-  src/
-    app.js                       # Middleware, /health, routes
-    index.js
-    config/
-    middleware/
-    models/
-      User.js
-      Expense.js
-      RecurringExpense.js
-      AuthToken.js
-    routes/
-      auth.js
-      expenses.js
-      recurring.js
-      admin.js
-    services/
-      mailer.js                  # Optional Resend provider
-    validation/
-  test/
-.github/workflows/
-  ci.yml
-  keepalive.yml                 # Scheduled /health ping
-```
+### Local multi-instance demonstration
+
+~~~mermaid
+flowchart LR
+  B[Browser] --> N[Nginx round-robin load balancer]
+  N --> A1[Express API 1]
+  N --> A2[Express API 2]
+  N --> A3[Express API 3]
+  A1 --> R[(Shared Redis)]
+  A2 --> R
+  A3 --> R
+  A1 --> M[(MongoDB)]
+  A2 --> M
+  A3 --> M
+~~~
+
+The 3-instance stack is a local demonstration, configured in Docker Compose. The current Render free service runs one instance; scaling Render out requires a plan that supports multiple instances. User sessions and shared control-state are database-backed, so sticky sessions are not required.
 
 ## Run locally
 
-Requires Node.js **20.19+** (or 22.12+) and a reachable MongoDB database.
+Requires Node.js 20.19+ (or Node 22.12+) and MongoDB.
 
-1. Copy `server/.env.example` to `server/.env`.
-2. Set `MONGODB_URI`, `JWT_SECRET` (at least 32 random characters), `CLIENT_ORIGIN=http://localhost:5173`, and local cookie settings (`COOKIE_SECURE=false`, `COOKIE_SAME_SITE=lax`). For production email verification/password reset, also configure `RESEND_API_KEY` and a verified `EMAIL_FROM` sender. Keep the API key in Render environment variables only.
-3. From the repository root run:
-   ```bash
-   npm install
+1. Copy server/.env.example to server/.env. Use a local MongoDB URI or a dedicated development database. Set JWT_SECRET to a random value of at least 32 characters and CLIENT_ORIGIN to http://localhost:5173. Keep real credentials out of Git.
+2. Install dependencies and run checks:
+
+   ~~~bash
+   npm ci
+   npm run lint
    npm test
    npm run build
-   ```
-4. In separate terminals start the API and the client:
-   ```bash
+   ~~~
+
+3. In two terminals, start the API and frontend:
+
+   ~~~bash
    npm run dev:server
    npm run dev:client
-   ```
-5. Open http://localhost:5173. Production uses Render environment variables; never add real credentials to a committed `.env` file.
+   ~~~
 
-## Blank-page recovery and asset caching
+4. Open http://localhost:5173.
 
-The HTML shell displays a styled boot state before React starts. If an app script fails to load or startup takes more than 12 seconds, the visitor sees a reload action instead of an empty background. A React error boundary catches synchronous render failures and offers a recovery action without exposing stack traces. Render static-site response headers revalidate `/` and `/index.html` while caching hashed `/assets/*` bundles for a year. The frontend and API service names in `render.yaml` are aligned with the existing Render services; if your Render project is not configured to sync the Blueprint automatically, use the same header rules under the static site’s Settings → Headers.
+You can run the isolated load-balanced stack with Docker Compose:
 
-## Health and Render cold starts
+~~~bash
+docker compose up --build
+~~~
 
-- `GET /health` returns HTTP 200 when MongoDB is connected and HTTP 503 otherwise. `GET /api/health` remains available for compatibility.
-- The frontend retries failed safe GET requests after brief delays and displays a wake-up state. Mutating requests are not automatically retried, because a timeout cannot prove whether the server committed the operation.
-- The scheduled GitHub Actions workflow requests `/health` every ten minutes. GitHub scheduled jobs can be delayed or suspended due to platform limits; a ping is not an uptime guarantee. For a professional demo, a paid always-on service or separate monitoring provider is more reliable.
+Then open http://localhost:8080. Use docker compose down to stop it. docker compose down -v deletes the local MongoDB/Redis volumes.
 
-For static asset caching, set these in Render Dashboard → Static Site → Headers: `/assets/*` → `Cache-Control: public, max-age=31536000, immutable`; `/index.html` → `Cache-Control: no-cache`. Hashed Vite assets are safe to cache long-term; the entry HTML should be revalidated after deploy.
+## Environment configuration
+
+Required for the API: NODE_ENV, MONGODB_URI, JWT_SECRET and CLIENT_ORIGIN. Production also requires COOKIE_SECURE=true. Review docs/OPERATIONS.md for the full Render variable matrix.
+
+Optional pairs/settings:
+
+- **Resend:** RESEND_API_KEY + EMAIL_FROM.
+- **Cloudflare Turnstile:** TURNSTILE_SECRET_KEY on the API and VITE_TURNSTILE_SITE_KEY at frontend build time.
+- **Google sign-in:** GOOGLE_CLIENT_ID on the API and the matching VITE_GOOGLE_CLIENT_ID at frontend build time.
+- **Redis/Upstash:** REDIS_URL for Docker/local Redis, or REDIS_REST_URL + REDIS_REST_TOKEN for an HTTPS Redis REST service. Do not set both modes together.
+- **2FA encryption:** TOTP_ENCRYPTION_KEY. Keep it stable and separate from JWT_SECRET; rotating it without a migration makes existing encrypted TOTP secrets undecryptable.
+- **Sentry-compatible reporting:** SENTRY_DSN and VITE_SENTRY_DSN. Empty disables diagnostics. Review the deployed CSP to ensure the configured DSN endpoint is allowed.
+
+No tokens are stored in browser localStorage. Access and refresh credentials use HttpOnly cookies. Browser-local preferences are not authentication credentials.
+
+## Cold starts and health checks
+
+- The HTML shell displays a branded boot state while React starts and offers a reload action if startup stalls.
+- Safe GET requests receive bounded retries and a “Waking up the server…” status. Mutating requests are not blindly retried after a network error, because the result can be ambiguous.
+- GET /health and GET /api/health expose readiness. Health checks inspect MongoDB and, when configured, Redis. Render is configured to use /health for API readiness.
+- GitHub Actions pings /health on a schedule. This is useful as a lightweight probe, not a guarantee of uptime or a substitute for an external monitor and alerting.
+- For a professional public status page, configure an uptime provider independently and monitor the API health URL. No provider account or public status page is silently created by this repository.
+
+## Performance and cache strategy
+
+- Expense indexes include user/date and user/category/date, plus a uniqueness guard for one recurring entry per user/rule/month.
+- List endpoints paginate against MongoDB. The dashboard currently loads user history in bounded batches for whole-history client filters and chart calculations; very large histories should move to server-side filtering/cursor pagination and summary-driven rendering.
+- Monthly and category aggregate endpoints use MongoDB aggregation and a short-lived shared cache. Cache keys include a per-user version; writes to expenses, imports, category renames and recurring materialization bump that version. Cache state uses Redis when configured and MongoDB-backed shared storage otherwise, not per-process memory.
+- Vite generates fingerprinted assets. Render config revalidates the entry HTML, caches fingerprinted assets, and adds security headers. Local Nginx uses gzip and long-lived caching for assets.
+- Index presence and cache logic do not prove a Lighthouse score. Run Lighthouse against the deployed site on desktop and mobile before reporting a score.
+
+## Security and privacy notes
+
+- The server is the authority for validation, session issuance and admin checks. Every expense query is scoped to the authenticated user.
+- Access tokens are short-lived. Refresh tokens rotate and are stored as hashes; replaying a used refresh token revokes its family. Session, audit and counter documents expire according to their configured TTLs.
+- Authentication rate limits use Redis when configured and atomically updated MongoDB counters as the shared fallback. A Redis outage can mark readiness unhealthy when Redis is configured, even while the counter fallback remains available; inspect logs and health before calling the service healthy.
+- Turnstile and Google sign-in are disabled until the matching key pairs are configured. The server verifies Turnstile tokens using Cloudflare Siteverify. Do not enable a provider without adding its data flow to the policies.
+- The privacy notice discloses Google Fonts as well as any configured Turnstile, Google Identity Services and Sentry integration. No advertising or behavioural analytics trackers are included.
+- Account deletion removes the application user, expenses, recurring rules, sessions and auth tokens. Security audit events have a separate retention policy; provider backups and hosting logs may retain data for their own retention period.
+- Keep MongoDB network allowlists restrictive and use a least-privilege database user. Never put Atlas credentials, JWT secrets, Resend keys or private backup decryption keys in the repository.
+
+## Automated backups and restore drills
+
+The workflow at .github/workflows/backup.yml runs daily and uploads only an age-encrypted archive. Configure GitHub Actions secret MONGODB_URI and repository variable BACKUP_AGE_RECIPIENT before enabling it; the private age identity must be kept offline. Artifacts expire after seven days, so this is a short-retention fallback rather than a long-term archive.
+
+The scripts under scripts/ can create a private local dump and restore it into a separate budgetry_restore_test database. Follow docs/OPERATIONS.md to decrypt an artifact, run the restore verification and record the outcome. The workflow and scripts do not prove a restore drill has passed until someone runs it against a separate test target.
+
+## CI and testing
+
+Run these locally:
+
+~~~bash
+npm run lint
+npm test
+npm run build
+npm audit --omit=dev --audit-level=high
+~~~
+
+GitHub Actions repeats lint, tests, production build and the production dependency audit on pushes/pull requests for main and staging. Render production deployment is tied to the configured production branch; staging must use separate Render services, MongoDB data and credentials.
+
+The tests cover INR Indian grouping, totals, filters/sorting, budget thresholds, CSV quoting/formula injection, demo fixture distribution, calendar-day formatting, quick-add parsing, category-name validation and server request validation. The CI build checks JSX transforms. A full Chromium flow, real OAuth/CAPTCHA/email-provider integration, axe scan, screen-reader audit, measured Lighthouse run, k6 run and restore drill still need to be performed on configured environments.
 
 ## Design decisions
 
-1. **Keep the stack, improve its boundaries.** React/Recharts already matched the app; a full CSS-framework rewrite would increase change surface without a clear product benefit.
-2. **Keep the demo isolated.** The public demo uses generated client-side records instead of a shared writable account, preventing visitors from changing each other's sample data.
-3. **Scope database queries by the authenticated user.** Listing, editing, deletion, exports, account deletion, and recurring rules always include the user identifier on the server.
-4. **Use bounded retries.** Only idempotent read requests are retried on transient connectivity failures. A POST is never blindly repeated after a network error.
-5. **Separate UI and pure business rules.** Budget thresholds, filters, currency formatting, CSV parsing, and demo data generation live in `client/src/lib/finance.js`, making core behavior easier to test.
-6. **Be explicit about local-only settings.** Budget limits and category colours are browser-local; recurring rules and expenses are database-backed.
+1. **Incremental migration:** keep the working React/Vite and Express/MongoDB stack rather than rewrite it for fashion.
+2. **Anonymous sample data:** demo records exist in browser state rather than a shared writable demo account, isolating visitors by default.
+3. **Server-side access control:** client UI conditions improve usability; authentication middleware and user-scoped database queries enforce permissions.
+4. **No blind write retries:** idempotent reads retry on transient connectivity errors; mutation requests are surfaced to the user instead of possibly duplicating a write.
+5. **Shared state for replicas:** server-side sessions and MongoDB counter/cache fallback avoid sticky-session dependence; Redis remains the faster optional store.
+6. **Explicit local preferences:** category budgets, custom colours and savings goals are account-scoped in that browser, not cloud-synced. The UI and docs state this rather than implying cross-device persistence.
 
-## Testing
+## Interview preparation
 
-```bash
-npm test
-npm run build
-```
+Ten sample answers covering design, authentication, demo isolation, cold starts, refresh sessions, CAPTCHA, load balancing, performance, security and reliability are in [docs/INTERVIEW_QA.md](docs/INTERVIEW_QA.md).
 
-The test suite covers API validation and admin allowlist checks, INR formatting, totals, search/date/category sorting, budget thresholds, CSV quoting/formula injection, and the 60-item demo fixture. CI runs tests and the production build on push and pull request.
+## Five further improvements
 
-## Demo access
-
-No public username/password is provided. Open the live site and choose **Try demo data**; this creates a local read-safe sample workspace, and **Reset demo** restores its 60 sample transactions. Sign-up is required for saved account-backed expense records.
-
-## Interview questions and sample answers
-
-### 1. Why did you choose this architecture?
-I used React for an interactive UI, Express for a small JSON API, and MongoDB for flexible expense records. Keeping the frontend and backend separate makes deployment and authorization boundaries clear while still letting me iterate quickly.
-
-### 2. How do you protect one user's expenses from another user?
-Authentication middleware verifies the signed session cookie and resolves the user from the database. Every expense query then scopes the operation by both the expense ID and authenticated user ID; the client cannot choose which user's records the API returns.
-
-### 3. How is the demo safe for interviews?
-Demo data is generated in the browser and held in component state. Add, edit, import, and delete actions stay local while demo mode is active, so the demo doesn't use a shared writable account or change real database records.
-
-### 4. How do you handle cold starts without creating duplicate expenses?
-The API retries safe GET requests a bounded number of times and shows a wake-up state. It does not blindly retry POST/PATCH/DELETE requests. Recurring rules use an atomic month marker so simultaneous requests cannot generate the same rule twice for one month.
-
-### 5. What makes the monthly summary accurate?
-The dashboard derives totals from the chosen month, calculates the prior month separately, aggregates category totals, and formats values with the `en-IN` locale. The test suite exercises currency grouping, filters, and budget boundaries.
-
-### 6. How do you prevent invalid or hostile input?
-Both client and server validate form data; the server is authoritative. Zod constrains amount/date/note/category fields, MongoDB schema validation adds a second boundary, React escapes rendered text by default, and exported CSV cells guard against spreadsheet formula injection.
-
-### 7. Why use client-side pagination after loading records?
-The current UI loads the API's server-paginated pages in bounded batches so monthly charts and cross-page filtering can use the complete personal history. The public API itself still paginates at the database query level. A future scale-up should add aggregated summary endpoints and keep filtering server-side for very large histories.
-
-### 8. What would you do before using this for a real financial product?
-I would rotate into a fully managed mail domain and validate deliverability, add security audit logs and monitored backups, move budget limits and category palettes to account-scoped storage, add end-to-end/browser accessibility tests, and commission a security review. This project is a portfolio expense tracker, not a regulated financial service.
-
-## Further improvements
-
-- Add provider health monitoring, resend throttling metrics, and UI feedback for email delivery status.
-- Move budgets and custom category palettes into account-scoped database preferences.
-- Add E2E tests for signup, CSV preview, recurring generation, undo delete, and account deletion.
-- Add scheduled data exports and configurable savings goals.
-- Add monitoring for health-check failures, API latency, and MongoDB connection errors.
+1. Persist budgets, savings goals and custom category definitions server-side with a cross-device preference API.
+2. Add automated browser E2E tests for signup/refresh, CSV preview/import, recurring entry generation, undo-delete and account deletion; add axe and screen-reader checks.
+3. Run and publish measured Lighthouse desktop/mobile results, plus the k6 baseline for cold and warmed requests.
+4. Add a separately hosted public status page with independent uptime alerts and documented incident response.
+5. Store encrypted backups in a long-retention object store, run scheduled isolated restore drills, and add a reviewed migration/retention policy before real financial use.

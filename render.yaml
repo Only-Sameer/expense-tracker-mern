@@ -1,7 +1,7 @@
 services:
   # Keep this name aligned with the existing Render static-site service.
   - type: web
-    name: ExpenseTracker-Web
+    name: only-sameer-expense-tracker-web
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: client/dist
@@ -25,16 +25,34 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=63072000; includeSubDomains; preload
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://only-sameer-expense-tracker-api.onrender.com https://challenges.cloudflare.com https://accounts.google.com https://oauth2.googleapis.com https://*.sentry.io; frame-src https://challenges.cloudflare.com https://accounts.google.com"
     envVars:
       - key: VITE_API_URL
         value: https://only-sameer-expense-tracker-api.onrender.com
+      - key: VITE_TURNSTILE_SITE_KEY
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: VITE_SENTRY_DSN
+        sync: false
 
   # Keep this name aligned with the existing Render Node web service.
   - type: web
-    name: ExpenseTracker-API
+    name: only-sameer-expense-tracker-api
     runtime: node
     rootDir: ""
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: npm start --prefix server
     healthCheckPath: /health
     envVars:
@@ -55,4 +73,18 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      - key: REDIS_REST_URL
+        sync: false
+      - key: REDIS_REST_TOKEN
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SENTRY_DSN
         sync: false

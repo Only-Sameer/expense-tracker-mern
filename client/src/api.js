@@ -1,18 +1,45 @@
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const RETRYABLE_STATUS = new Set([502, 503, 504]);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const NO_REFRESH_PATHS = [
+  '/auth/login', '/auth/signup', '/auth/google', '/auth/refresh',
+  '/auth/password-reset', '/auth/password-reset/request',
+  '/auth/verification-request', '/auth/verify-email',
+];
 const sleep = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
+let refreshInFlight = null;
 
 function announceWaking(active, message) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent('budgetry:server-state', {
-    detail: { active, message }
-  }));
+  window.dispatchEvent(new CustomEvent('budgetry:server-state', { detail: { active, message } }));
+}
+function isAuthEntry(path) {
+  return NO_REFRESH_PATHS.some(suffix => path === suffix || path.startsWith(suffix + '/'));
+}
+async function rawFetch(path, options = {}) {
+  return fetch(API_BASE + '/api' + path, {
+    credentials: 'include',
+    ...options,
+    headers: {
+      ...(options.body && typeof options.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+  });
+}
+async function refreshAccessSession() {
+  // Serialize refreshes so two expired API requests in this tab do not rotate the same token concurrently.
+  if (!refreshInFlight) {
+    refreshInFlight = rawFetch('/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      .then(response => response.ok)
+      .finally(() => { refreshInFlight = null; });
+  }
+  return refreshInFlight;
 }
 
 /**
- * Retry only safe requests. Mutating requests are never retried automatically,
- * because a timed-out POST may already have been saved on the server.
+ * Safe GETs retry common Render cold-start/network failures. Mutating requests are
+ * not retried after network failures. A 401 may be retried once after refresh:
+ * auth middleware rejects that request before its route handler can mutate data.
  */
 export async function api(path, options = {}) {
   const method = String(options.method || 'GET').toUpperCase();
@@ -22,14 +49,16 @@ export async function api(path, options = {}) {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const response = await fetch(API_BASE + '/api' + path, {
-        credentials: 'include',
-        ...options,
-        headers: {
-          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-          ...options.headers,
-        },
-      });
+      let response = await rawFetch(path, options);
+
+      if (response.status === 401 && !isAuthEntry(path) && !options.__refreshRetried) {
+        try {
+          const refreshed = await refreshAccessSession();
+          if (refreshed) {
+            response = await rawFetch(path, { ...options, __refreshRetried: true });
+          }
+        } catch { /* Surface the original 401 when refresh itself cannot run. */ }
+      }
 
       if (canRetry && RETRYABLE_STATUS.has(response.status) && attempt < maxAttempts) {
         announceWaking(true, 'The service is starting. Retrying automatically…');
@@ -48,6 +77,8 @@ export async function api(path, options = {}) {
             : 'Request failed (' + response.status + ').'
         ));
         error.status = response.status;
+        error.code = body.code;
+        error.retryAfter = response.headers.get('Retry-After');
         throw error;
       }
       if (type.includes('text/csv')) return response.blob();
@@ -62,11 +93,8 @@ export async function api(path, options = {}) {
   }
 
   announceWaking(false);
-  const error = new Error(
-    'Budgetry could not reach the server after a few attempts. The service may be waking up—please retry.'
-  );
+  const error = new Error('Budgetry could not reach the server after a few attempts. The service may be waking up—please retry.');
   error.cause = lastNetworkError;
   throw error;
 }
-
 export const json = data => JSON.stringify(data);

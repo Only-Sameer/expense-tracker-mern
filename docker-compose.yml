@@ -1,0 +1,107 @@
+services:
+  mongo:
+    image: mongo:8
+    command: ["mongod", "--bind_ip_all"]
+    volumes:
+      - budgetry-mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - budgetry-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  api1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    environment: &api-env
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/expense_tracker
+      JWT_SECRET: ${JWT_SECRET:-local-only-change-this-secret-before-any-shared-use-123456}
+      CLIENT_ORIGIN: http://localhost:8080
+      COOKIE_SECURE: "false"
+      COOKIE_SAME_SITE: lax
+      ACCESS_TOKEN_TTL: 15m
+      REFRESH_TOKEN_DAYS: 30
+      REFRESH_TOKEN_SHORT_HOURS: 12
+      REDIS_URL: redis://redis:6379
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 5
+
+  api2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    environment: *api-env
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 5
+
+  api3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    environment: *api-env
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "8080:80"
+    depends_on:
+      api1:
+        condition: service_healthy
+      api2:
+        condition: service_healthy
+      api3:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  budgetry-mongo:
+  budgetry-redis:

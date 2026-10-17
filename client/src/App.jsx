@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { api } from './api.js';
 import Header from './components/Header.jsx';
 import { useScrollProgress, useTheme } from './hooks.js';
@@ -23,7 +23,19 @@ export default function App() {
   const [cookieSettings, setCookieSettings] = useState(false);
   const [showBackTop, setShowBackTop] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const progress = useScrollProgress();
+
+  useEffect(() => {
+    const path = location.pathname.replace(/\/+$/, '') || '/';
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.href = 'https://only-sameer-expense-tracker-web.onrender.com' + path;
+    const robots = document.querySelector('meta[name="robots"]');
+    if (robots) {
+      const privateRoute = /^\/(admin|login|signup|forgot-password|reset-password|verification-request|verify-email)(?:\/|$)/.test(path);
+      robots.content = privateRoute ? 'noindex,nofollow' : 'index,follow,max-image-preview:large';
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const onServerState = event => { setServerWaking(Boolean(event.detail?.active)); if (event.detail?.message) setServerMessage(event.detail.message); };
@@ -57,7 +69,7 @@ export default function App() {
     <main id="main" tabIndex="-1">
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>
-          <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} onThemeToggle={toggleTheme} theme={theme} /> : <div className="server-waking-state" role="status" aria-live="polite"><span className="spinner" /><h1>{serverWaking ? 'Waking up the server…' : 'Connecting to Budgetry…'}</h1><p>{serverWaking ? 'The service may be starting after a quiet period. We are retrying safely. Please hang tight.' : 'Checking your session and preparing your dashboard.'}</p><div className="waking-progress" aria-hidden="true"><span /></div></div>} />
+          <Route path="/" element={authChecked ? <Dashboard key={user?.id || 'anonymous'} user={user} setUser={setUser} onThemeToggle={toggleTheme} theme={theme} /> : <div className="server-waking-state" role="status" aria-live="polite"><span className="spinner" /><h1>{serverWaking ? 'Waking up the server…' : 'Connecting to Budgetry…'}</h1><p>{serverWaking ? 'The service may be starting after a quiet period. We are retrying safely. Please hang tight.' : 'Checking your session and preparing your dashboard.'}</p><div className="waking-progress" aria-hidden="true"><span /></div></div>} />
           <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login?next=%2Fadmin&admin=1'} replace />} />
           <Route path="/login" element={<Auth mode="login" setUser={setUser} />} />
           <Route path="/signup" element={<Auth mode="signup" setUser={setUser} />} />
@@ -72,14 +84,14 @@ export default function App() {
         </Routes>
       </Suspense>
     </main>
-    <footer className="site-footer"><span>© {new Date().getFullYear()} Budgetry</span><div><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookie Policy</Link><button className="text-button" onClick={() => setCookieSettings(true)}>Cookie settings</button></div><small>No advertising or analytics trackers are included.</small></footer>
+    <footer className="site-footer"><span>© {new Date().getFullYear()} Budgetry</span><div><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookie Policy</Link><button className="text-button" onClick={() => setCookieSettings(true)}>Cookie settings</button></div><small>No advertising or behavioural analytics are included. Optional bot protection, Google sign-in and error reporting activate only when configured; see Privacy.</small></footer>
     {(!cookieChoice || cookieSettings) && <div className="consent-backdrop">
       <section className="consent-panel" role="dialog" aria-modal="true" aria-labelledby="consent-title">
         <h2 id="consent-title">{cookieSettings ? 'Cookie preferences' : 'Your privacy choices'}</h2>
-        <p>We use essential session and preference storage to run this app. No analytics or advertising scripts are included. Read our <Link to="/cookies">Cookie Policy</Link>.</p>
-        <p className="muted">Essential storage is always active. There are currently no non-essential cookies to enable.</p>
+        <p>We use essential session and preference storage. If enabled by the site operator, Cloudflare Turnstile protects forms, Google Identity Services provides sign-in, and Sentry receives technical error diagnostics. We do not use advertising or behavioural analytics. Read our <Link to="/cookies">Cookie Policy</Link>.</p>
+        <p className="muted">Essential storage is always active. Optional integrations are enabled only when their environment keys are configured and are disclosed in the Privacy Policy.</p>
         <div className="consent-actions"><button className="button button-secondary" onClick={() => saveConsent('accepted')}>Accept all</button><button className="button button-secondary" onClick={() => saveConsent('rejected')}>Reject non-essential</button><button className="button button-secondary" onClick={() => setCookieSettings(true)}>Manage preferences</button></div>
-        {cookieSettings && <div className="consent-manage"><p><strong>Optional cookies:</strong> none are currently configured in this app. Saving preferences will not load any third-party scripts.</p><button className="button button-primary" onClick={() => saveConsent('managed')}>Save preferences</button><button className="text-button" onClick={() => setCookieSettings(false)}>Close without changing</button></div>}
+        {cookieSettings && <div className="consent-manage"><p><strong>Optional integrations:</strong> Budgetry does not use advertising or behavioural analytics. When configured, Cloudflare Turnstile may process anti-bot signals, Google Identity Services handles Google sign-in, and Sentry receives technical error diagnostics. These services are disclosed in our policies.</p><button className="button button-primary" onClick={() => saveConsent('managed')}>Save preferences</button><button className="text-button" onClick={() => setCookieSettings(false)}>Close without changing</button></div>}
       </section>
     </div>}
     {showBackTop && <button className="back-top" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}>↑</button>}

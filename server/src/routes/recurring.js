@@ -4,6 +4,8 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth } from '../middleware/auth.js';
 import Expense from '../models/Expense.js';
 import RecurringExpense from '../models/RecurringExpense.js';
+import { writeAuditEvent } from '../services/auditLog.js';
+import { invalidateExpenseAggregates as bumpAggregateVersion } from '../services/redisRest.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -65,6 +67,10 @@ async function createDueExpenses(userId, now = new Date()) {
       { $set: { lastGeneratedMonth: stamp } },
     );
   }
+  if (generated > 0) {
+    try { await bumpAggregateVersion(userId); }
+    catch (error) { console.error('Aggregate cache invalidation failed:', error?.message || 'unknown error'); }
+  }
   return { generated, generatedItems };
 }
 router.get('/', asyncHandler(async (req, res) => {
@@ -78,6 +84,7 @@ router.get('/', asyncHandler(async (req, res) => {
 router.post('/', asyncHandler(async (req, res) => {
   const data = recurringSchema.parse(req.body);
   const item = await RecurringExpense.create({ ...data, user: req.user._id });
+  await writeAuditEvent(req, { action: 'recurring-expense-created', metadata: { category: item.category } });
   const generation = await createDueExpenses(req.user._id);
   const refreshed = await RecurringExpense.findById(item._id).lean();
   res.status(201).json({ item: refreshed, generated: generation.generated, generatedItems: generation.generatedItems });
@@ -86,6 +93,7 @@ router.post('/', asyncHandler(async (req, res) => {
 router.delete('/:id', asyncHandler(async (req, res) => {
   const item = await RecurringExpense.findOneAndDelete({ _id: req.params.id, user: req.user._id });
   if (!item) return res.status(404).json({ error: 'Recurring expense not found.' });
+  await writeAuditEvent(req, { action: 'recurring-expense-deleted', metadata: { category: item.category } });
   res.status(204).end();
 }));
 

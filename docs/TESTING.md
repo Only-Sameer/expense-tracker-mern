@@ -1,63 +1,52 @@
-# Budgetry testing checklist
+# Budgetry testing guide
 
 ## Automated checks
 
-From the repository root run:
+Run from the repository root:
 
-    npm ci
-    npm test
-    npm run build
+~~~bash
+npm ci
+npm run lint
+npm test
+npm run build
+npm audit --omit=dev --audit-level=high
+~~~
 
-CI runs the same test and build commands for pushes and pull requests. Unit tests cover core INR formatting, totals, filters, sorting, budget thresholds, CSV quoting/formula-injection guards, demo data, request validation and the admin allowlist. Passing tests do not replace an end-to-end browser pass.
+GitHub Actions runs lint, server/client tests, production build and the production dependency audit on pushes and pull requests to main/staging.
 
-## Core product workflows
+## Unit tests currently covered
 
-- [ ] Open the public landing page while logged out. Test Sign up, Sign in, and Try demo data.
-- [ ] Verify demo shows 60 sample records from six months and Reset demo restores its fixture.
-- [ ] In demo mode, add, edit, delete, import, export, and change budgets; verify no API mutation is made by demo operations.
-- [ ] Sign up with a new email, log out, and sign in. Confirm an incorrect password has a generic error and duplicate email is rejected.
-- [ ] If Resend is configured, test verification and password-reset emails with real inboxes; confirm expired/used tokens cannot be reused.
-- [ ] Add/edit an expense with INR amount, all available categories, date, and a 300-character note. Try zero/negative amount, invalid dates and overlong notes.
-- [ ] Test note search, category filter, from/to dates, each sort mode, page navigation and no-results state.
-- [ ] Verify monthly totals/change/top category/daily average and the year selector around a December/January boundary.
-- [ ] Test CSV and JSON exports. Import a valid CSV, inspect its preview, cancel it, then import it. Try malformed dates, unknown categories, formula-like cells, duplicate rows, empty CSV and more than 250 rows.
-- [ ] Rename a custom category; confirm current expenses and recurring rules use the new name. Change its colour and confirm the chip/badge uses that colour.
-- [ ] Create a recurring rule with due day in the current month. Confirm one generated record appears after the due date and refreshing or opening a second tab does not create another entry.
-- [ ] Test budget warning colours at 79%, 80%, 99%, and 100%.
-- [ ] Delete an expense and use Undo before the snackbar expires. Then delete another and confirm it stays deleted.
-- [ ] In Settings, test the typed DELETE confirmation and cancel path. Only run permanent deletion against a disposable test account.
-- [ ] Use two separate test accounts to verify neither can view, edit, export, or delete the other's data.
-- [ ] Confirm the admin link routes through sign-in for logged-out visitors and server-side allowlisting rejects non-admin accounts.
+- INR formatting with Indian digit grouping.
+- Totals, category/date/search filtering and sort.
+- Budget threshold boundaries.
+- CSV quoting, escaped quotes, multi-line values and spreadsheet formula-injection protection.
+- Six-month, 60-entry demo fixture.
+- Calendar-day formatting without a UTC date shift.
+- Quick-add parsing and invalid calendar dates.
+- Server signup/expense validation, date validation, category rename and import batch limit.
+- Administrator email allowlist checks.
 
-## Security and API checks
+## Manual browser release test
 
-- [ ] Confirm /health returns 200 only when MongoDB is connected and 503 when disconnected.
-- [ ] Inspect the browser cookie: it should be HttpOnly and Secure in production, with SameSite matching the deployment.
-- [ ] Verify the JWT is not stored in localStorage/sessionStorage.
-- [ ] Inspect browser storage: expected keys include expense-theme, expense-cookie-consent, budgetry-budgets, budgetry-recurring and budgetry-custom-categories. Budget and custom-category preferences are currently browser-local.
-- [ ] Send an unsafe API request with an untrusted or missing Origin and verify it is rejected.
-- [ ] Exercise the login rate limit and server-side validation on invalid inputs.
-- [ ] Test CSV formula injection for values beginning with =, +, - and @.
-- [ ] Run npm audit. Confirm no real secrets have been committed and that Render's MongoDB URI, JWT secret and mail-provider key are environment variables.
-- [ ] Verify account deletion removes the app's user, expenses, recurring rules and auth tokens; review separate provider backup/log retention.
-- [ ] Use DevTools or curl to verify cache headers: hashed /assets files should have a long immutable cache, while /index.html should revalidate.
+Use a configured staging environment and a browser profile with no existing Budgetry cookies/storage.
 
-## Accessibility and responsive checks
+1. Open the public landing page in light and dark system preference. Verify title, logo, hero, preview, Try demo, Sign up, footer, legal links, font loading and narrow 360px viewport.
+2. Try demo. Verify it contains 60 sample records spanning six months, add/edit/delete/import work locally, reset restores the fixtures, and no network write is sent to expense endpoints.
+3. Sign up, verify CAPTCHA if configured, verify email if Resend is configured, and then sign in. Test refresh after the access session expires or by using a staging test path. Inspect cookies in DevTools: auth cookies must be HttpOnly and Secure in production; no token should be stored in localStorage.
+4. Complete the first-run wizard, add an expense using quick-add text, and test date boundaries, amount validation, 300-character notes, tags, keyboard Enter, Escape and focus return.
+5. Search by note/category/tag. Change category, date range and sort, move between pages, and inspect mobile card layout. Verify no horizontal scroll at 360px and 1920px widths.
+6. Add and rename a custom category, create category and monthly budgets, make a savings goal, then sign out and sign in to the same account. Confirm account-scoped browser preferences stay separate when testing a second account in the same browser.
+7. Add a recurring rule due today in staging and request the recurring list twice. Confirm only one expense is materialized for the rule/month.
+8. Test CSV export/import with valid records, empty file, malformed date, invalid amount, unknown category, duplicate rows and formula-like text. Verify preview and cancellation do not save rows.
+9. In Settings, check active sessions, revoke another session, log out all sessions and verify the typed DELETE flow rejects an incorrect confirmation/password. For a test account, verify successful deletion removes the user and associated data.
+10. Try unauthorised requests to expense and admin APIs. Confirm they fail without valid sessions, and a non-allowlisted user cannot access Admin APIs.
+11. Verify Privacy, Terms and Cookie pages disclose all configured providers. Inspect cookies, network requests and Content-Security-Policy headers.
+12. Confirm /health reports database readiness, then perform the k6 run and the encrypted backup/restore drill in a separate test database.
 
-- [ ] Run Lighthouse on the landing page, dashboard, login/signup and legal pages; record actual scores rather than assuming 90+.
-- [ ] Run axe DevTools and resolve critical/serious findings.
-- [ ] Keyboard-only test skip link, navigation, theme switch, forms, modal close/submit, category chips, filters, import preview, pagination, avatar menu and consent dialog.
-- [ ] Confirm the N and / shortcuts do not fire when a text field/select or editable element has focus.
-- [ ] Verify visible focus rings and focus restoration after dialogs/menus close.
-- [ ] Test prefers-reduced-motion and system dark/light settings.
-- [ ] Test 360px, 390px, tablet, 1200px and 1920px, landscape mobile, and 200% browser zoom for horizontal scrolling/overlap.
-- [ ] Check text contrast and control boundaries in both themes, including custom category badges and error/toast states.
-- [ ] Spot-check with a screen reader, especially chart summaries, table headers, loading/wake-up messages, and form errors.
+## Accessibility and performance checks
 
-## Render / release check
-
-- [ ] Confirm frontend and backend deployments reference the same current main commit and have status live.
-- [ ] Confirm the frontend's public screenshot/image/logo assets load and all routes survive direct navigation and browser refresh.
-- [ ] Check /health after deployment.
-- [ ] Confirm custom header rules in Render's static-site settings: /assets/* → Cache-Control: public, max-age=31536000, immutable; /index.html → Cache-Control: no-cache.
-- [ ] Verify the keepalive workflow is enabled and has a recent successful run. A scheduled ping may be delayed; it is not an uptime SLA.
+- Run Lighthouse for Performance, Accessibility, Best Practices and SEO on both mobile and desktop. Record actual scores and test conditions.
+- Run axe, keyboard-only navigation and screen-reader checks. Verify dialog focus containment/return, accessible chart text/legends, labels, error announcements, focus visibility, contrast and reduced-motion behavior.
+- Measure cold-start and warmed requests separately. Save screenshots of VUs, req/s, p95/p99 latency, failure rate, checks and instance count.
+- Test month-end dates in multiple timezone configurations.
+- Do not report a score, provider integration or restore drill as complete unless the test was actually run and recorded.

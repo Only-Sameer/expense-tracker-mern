@@ -5,3 +5,9 @@ dist/
 !.env.example
 coverage/
 .DS_Store
+backups/
+*.archive
+*.archive.gz
+*.dump
+*.dump.gz
+*.sha256

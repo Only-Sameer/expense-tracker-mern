@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   budgetTone, createDemoExpenses, csvCell, filterExpenseRecords,
-  money, parseCsv, sumAmounts, monthKey, formatDate
+  money, parseCsv, sumAmounts, monthKey, formatDate, parseQuickAdd
 } from './finance.js';
 
 test('INR formatting uses Indian digit grouping', () => {
@@ -59,4 +59,17 @@ test('demo data is 60 varied expenses distributed over six months', () => {
 test('ISO expense calendar dates display consistently without timezone day-shifts', () => {
   assert.equal(formatDate('2026-10-17T00:00:00.000Z'), '17 Oct 2026');
   assert.equal(formatDate('2026-10-17'), '17 Oct 2026');
+});
+
+
+test('quick-add parser handles rupee amounts, categories and relative calendar dates', () => {
+  const now = new Date(2026, 9, 17, 11, 30);
+  assert.deepEqual(parseQuickAdd('250 coffee yesterday', now), {
+    amount: 250, category: 'Food', date: '2026-10-16', note: 'coffee'
+  });
+  assert.deepEqual(parseQuickAdd('₹1,250.50 metro today', now), {
+    amount: 1250.5, category: 'Transport', date: '2026-10-17', note: 'metro'
+  });
+  assert.equal(parseQuickAdd('no amount here', now).error.includes('Start with an amount'), true);
+  assert.equal(parseQuickAdd('50 rent 2026-02-31', now).error.includes('real calendar date'), true);
 });

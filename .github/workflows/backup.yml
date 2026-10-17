@@ -1,0 +1,63 @@
+name: Encrypted MongoDB backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Validate backup configuration
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "Missing GitHub Actions secret MONGODB_URI."
+            exit 1
+          fi
+          if [ -z "$BACKUP_AGE_RECIPIENT" ]; then
+            echo "Missing repository variable BACKUP_AGE_RECIPIENT. Configure an age public recipient before enabling automated backups."
+            exit 1
+          fi
+
+      - name: Install MongoDB Database Tools and age
+        run: |
+          curl --fail --silent --show-error --location \
+            https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2404-x86_64-100.19.1.deb \
+            --output mongodb-database-tools.deb
+          sudo apt-get update
+          sudo apt-get install --yes ./mongodb-database-tools.deb age
+
+      - name: Dump and encrypt production database
+        id: dump
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          plain="budgetry-${stamp}.archive.gz"
+          encrypted="budgetry-${stamp}.archive.gz.age"
+
+          # The URI is passed as an environment variable and never echoed.
+          mongodump --uri "$MONGODB_URI" --db expense_tracker --archive="$plain" --gzip
+          age --recipient "$BACKUP_AGE_RECIPIENT" --output "$encrypted" "$plain"
+          rm -f "$plain"
+          echo "archive=$encrypted" >> "$GITHUB_OUTPUT"
+          echo "Encrypted backup is ready for artifact upload."
+
+      - name: Upload encrypted backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: budgetry-encrypted-db-${{ github.run_id }}
+          path: ${{ steps.dump.outputs.archive }}
+          if-no-files-found: error
+          retention-days: 7

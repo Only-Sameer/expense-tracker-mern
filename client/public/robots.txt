@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://only-sameer-expense-tracker-web.onrender.com/sitemap.xml

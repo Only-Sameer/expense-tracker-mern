@@ -8,6 +8,7 @@ const expenseSchema = new mongoose.Schema({
   category: { type: String, required: true, trim: true, maxlength: 40, match: /^[\p{L}\p{N} '&\/-]+$/u },
   date: { type: Date, required: true },
   note: { type: String, trim: true, maxlength: 300, default: '' },
+  tags: { type: [String], default: [], validate: values => values.length <= 8 && values.every(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.length <= 24) },
 }, { timestamps: true, versionKey: false });
 expenseSchema.index({ user: 1, date: -1 });
 expenseSchema.index({ user: 1, category: 1, date: -1 });

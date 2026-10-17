@@ -1,15 +1,31 @@
 name: CI
+
 on:
   push:
+    branches: [main, staging]
   pull_request:
+    branches: [main, staging]
+
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint source
+        run: npm run lint
+      - name: Run unit and validation tests
+        run: npm test
+      - name: Build production frontend
+        run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { captureException } from '../lib/telemetry.js';
 
 /**
  * Last-resort UI for synchronous React render failures.
@@ -17,7 +18,8 @@ export default class RuntimeErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     // Browser console only: never display stack traces or request/account details in the UI.
-    console.error('Budgetry could not render this screen.', error, info.componentStack);
+    console.error('Budgetry could not render this screen.', error?.message || 'unknown error');
+    captureException(error, { component: info.componentStack || 'RuntimeErrorBoundary' });
   }
 
   render() {

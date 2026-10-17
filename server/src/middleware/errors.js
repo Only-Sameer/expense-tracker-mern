@@ -1,3 +1,5 @@
+import { captureServerException } from '../services/sentry.js';
+
 export function notFound(req, res) {
   res.status(404).json({ error: 'Endpoint not found.' });
 }
@@ -7,12 +9,13 @@ export function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: 'Request body contains invalid JSON.' });
   }
   if (err?.name === 'ZodError') return res.status(400).json({ error: 'Please check the submitted fields.', details: err.issues });
-  if (err?.code === 11000) return res.status(409).json({ error: 'An account with that email already exists.' });
+  if (err?.code === 11000) return res.status(409).json({ error: 'Unable to complete this operation with those details.' });
   if (err?.name === 'ValidationError' || err?.name === 'CastError') return res.status(400).json({ error: 'Submitted data is invalid.' });
   if (err?.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });
   if (Number.isInteger(err?.status) && err.status >= 400 && err.status < 600) {
     return res.status(err.status).json({ error: err.message || 'Request could not be completed.' });
   }
-  console.error('Request error:', err);
+  console.error('Request error:', err?.message || 'unknown error');
+  captureServerException(err, req);
   res.status(500).json({ error: 'Something went wrong. Please try again.' });
 }

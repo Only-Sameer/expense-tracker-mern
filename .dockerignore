@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+client/dist
+server/coverage
+.git
+.env
+.env.*
+!.env.example
+backups
+*.dump
+*.archive
+*.gz

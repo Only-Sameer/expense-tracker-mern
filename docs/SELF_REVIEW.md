@@ -1,32 +1,42 @@
-# Self-review: verified status and known limitations
+# Self-review: status and limitations
 
-Last reviewed: 17 October 2026.
+Updated 17 October 2026.
 
-## Verified from repository and service metadata
+## Implemented in source
 
-- The latest main commit on the review pass was deployed by Render; both the frontend static site and backend API reported status live.
-- GitHub Actions CI for the reviewed main commit completed successfully. CI installs from the package lockfile, runs the server and client helper tests, and builds the production frontend.
-- The API defines both /health and /api/health. They return HTTP 200 when MongoDB is connected and 503 when it is not.
-- The authenticated API uses bcrypt password hashes, an HttpOnly cookie, session-version checks, exact Origin validation on unsafe methods, request validation, an authentication rate limiter, and user-scoped expense queries.
-- Anonymous demo entries are generated in browser memory. Demo add/edit/import/delete actions do not write to the database.
-- CSV import validates the file and shows a preview before batch save; server validation limits an import to 250 records and validates all rows before insertMany.
-- The app has a PWA manifest, favicon, social-share SVG artwork, an illustrative landing-page dashboard preview, and a scheduled GitHub Actions health ping.
+- Responsive landing/dashboard UI, local-only 60-record six-month demo, charts, expense CRUD, filters, pagination, CSV/JSON import/export, recurring rules, custom categories, browser-local category budgets/savings goals, onboarding, quick-add parsing and tags.
+- Metadata, canonical URL updates, robots.txt, sitemap.xml, favicon, web app manifest, SVG social preview, skip link, theme toggle and reduced-motion styling.
+- API health/readiness endpoints, bounded retries for safe reads, Render health probe and graceful Node/Mongoose shutdown.
+- bcrypt password hashes, HttpOnly short-lived access cookie, rotating hashed refresh tokens, server-side sessions and reuse detection, email verification/reset flows, optional Google ID-token verification, optional Turnstile Siteverify, TOTP, active-session revocation and audit events.
+- Origin checking, Helmet API headers and static-site response security headers; Zod request validation and user-scoped database queries.
+- Redis/Upstash adapter plus atomic MongoDB fallback for auth counters and aggregate caches; per-user summary cache versioning; user/date and user/category/date expense indexes.
+- Dockerfile, Docker Compose three-replica Nginx demo, k6 scenario, backup/restore scripts, optional encrypted scheduled backup workflow, CI and docs for operations/interviews.
 
-## Limitations that still need testing or configuration
+## Required configuration before calling optional services active
 
-1. **Browser end-to-end and Lighthouse:** CI passing is not a browser test. No real Chromium end-to-end run, full Lighthouse audit, axe scan, or screen-reader review was performed in this review. Do not claim a Lighthouse 90+ score until it is measured on the live website.
-2. **Email delivery:** Email verification and password reset are implemented using Resend, but work only if both RESEND_API_KEY and EMAIL_FROM are configured in Render and the sender/domain is verified. That configuration and real inbox delivery were not confirmed here.
-3. **Budget/category preferences:** Monthly budgets, custom category definitions/colours, and parts of the recurring UI state are browser-local preferences. They do not yet synchronize across browsers/devices. Expense records and recurring rules are stored server-side.
-4. **Recurring timing:** Recurring rules are materialized on the next authenticated request to /api/recurring on or after the due date. This is idempotent per rule/month, but it is not a clock-triggered worker; if nobody opens the app, the entry waits until the next dashboard load.
-5. **Large histories:** The dashboard fetches query-paginated records in batches to compute global summary totals and filter across the full list. For very large accounts, add summary aggregation endpoints and server-side search/filtering rather than loading every page.
-6. **CSV import:** Validation and preview are implemented, and the server validates the batch before writing. Duplicate rows within a file are highlighted/countable, but comparison against previously saved expenses is not a complete duplicate-detection system.
-7. **Time zones:** Calendar date helpers preserve ISO date prefixes when grouping/displaying expenses. Still manually test dates around month boundaries on devices configured in different time zones.
-8. **Accessibility:** CSS tokens have calculated contrast ratios and visible focus styling; this is not proof that every chart, tinted category badge, modal, disabled state, and hover/focus state passes WCAG 2.2 AA. Verify with a rendered-page contrast tool, axe, and keyboard/screen-reader tests.
-9. **Cache headers:** Static-asset caching rules can be configured with Render custom headers or through a static-site Blueprint. The existing live static service's actual response headers were not retrieved during this review. Confirm Cache-Control in browser DevTools or curl after configuring it.
-10. **OG artwork:** The Open Graph artwork is SVG with a 1200 × 630 viewBox. Some third-party social previews prefer PNG/JPEG; generate a raster fallback if a target service does not display SVG.
-11. **Account deletion and retention:** The API deletes the user, related expense documents, recurring rules, and auth tokens. Database backups and infrastructure/security logs follow provider retention settings and are not necessarily removed immediately.
-12. **Operations:** Add structured request logs with sensitive-field redaction, uptime alerts, backup/restore drills, and a written incident contact before using this as a real financial service. The current application is a portfolio expense tracker, not a regulated banking product.
+1. Turnstile: configure the frontend public site key and matching server secret key, then test signup and challenge after failed logins.
+2. Google sign-in: configure a Google Web OAuth client ID in both frontend build and API service; test popup behavior on each intended hostname.
+3. Email verification/password reset: configure a verified Resend sender and API key, then test real inbox delivery and expired/reused tokens.
+4. Redis fast path: configure Redis/Upstash for hosted performance. MongoDB-backed shared counters/cache remain the fallback.
+5. Sentry-compatible diagnostics: set DSNs only after reviewing policy disclosures and deployed CSP.
+6. Automated encrypted backup workflow: configure the GitHub MONGODB_URI secret and BACKUP_AGE_RECIPIENT variable. The private age identity must be held offline.
 
-## Dependency/security housekeeping
+## Items not yet verified
 
-The repository includes a package lockfile and CI. Continue reviewing dependencies with npm audit and update intentionally rather than blindly. Do not put MongoDB credentials, JWT secrets, or the Resend key in committed .env files; keep production values in Render environment variables. For a production release, confirm MongoDB network allowlisting and database-user least privilege.
+- A full Chromium end-to-end flow across sign-up, refresh rotation, add/edit/delete, CSV preview/import, account deletion, Google OAuth and Turnstile challenge.
+- Real inbox email delivery and Google/Turnstile provider configuration.
+- A measured Lighthouse score of 90+ on all four categories, a complete WCAG 2.2 AA audit, axe scan, screen-reader review and viewport testing from 360px to 1920px.
+- A measured k6 load test on an appropriately provisioned service, including cold and warm runs, p95/p99 latency and error rate.
+- A completed backup and restore drill into a separate test database, plus an independently hosted public status page and alert path.
+- Render scale-out is plan-dependent; the free service remains single-instance. The local Compose stack demonstrates three replicas behind Nginx.
+- Budget limits, custom category palettes and savings goals remain local preferences, scoped per account on that browser rather than synced to the server.
+- The dashboard loads query-paginated expense history in bounded batches for full-history charts and filters. Very large histories should move to cursor pagination and aggregate-driven UI.
+- Current deployed behavior must be tested after the new commit is pushed and deployed. Do not treat an earlier deployed commit's status as proof that this new release passed.
+
+## Security and privacy caveats
+
+- Keep MongoDB access allowlists restrictive and the database user least-privileged.
+- Keep JWT_SECRET, TOTP_ENCRYPTION_KEY, Resend key, Redis token and private backup identities outside Git.
+- TOTP_ENCRYPTION_KEY must remain stable for existing encrypted TOTP secrets.
+- Cookie SameSite setting depends on the frontend/API site relationship. Current separate Render hostnames use Secure + SameSite=None; SameSite=Lax should be adopted only after moving to a same-site custom domain and testing the complete auth flow.
+- The app is a portfolio expense tracker, not a regulated financial product. Perform an independent security review before storing financial data for real-world customers.
