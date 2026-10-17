@@ -48,6 +48,7 @@ The dashboard is implemented with reusable React components and a small shared f
 ```text
 client/src/
   components/
+    Header.jsx           # Brand, theme toggle, avatar menu and logout
     BudgetryUI.jsx       # Sidebar, StatCard, forms, tables, charts, empty states, SettingsPage
   lib/
     finance.js           # INR formatting, category metadata, dates, CSV parsing, demo data
