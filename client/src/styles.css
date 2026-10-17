@@ -411,3 +411,11 @@ small{font-size:12px}
 .public-screenshot-heading h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.035em;margin:8px 0}
 .public-screenshot-heading p{font-size:16px;color:var(--muted);margin:0}
 .public-screenshot img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:16px;box-shadow:0 24px 64px rgba(2,6,23,.28);background:var(--surface)}
+
+
+/* Boot and render failure states: never leave the visitor with a featureless page. */
+.runtime-error-screen{min-height:70vh;display:grid;place-items:center;padding:28px 16px;background:var(--bg);color:var(--text)}
+.runtime-error-card{width:min(100%,520px);display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:32px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+.runtime-error-mark{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--danger-bg);color:var(--danger);font-size:23px;font-weight:900}
+.runtime-error-card h1{margin:0}.runtime-error-card p:not(.section-kicker){font-size:16px;line-height:1.65;color:var(--muted);margin:0 0 8px}
+.runtime-error-home{display:inline-block;color:var(--accent);font-weight:700;font-size:14px;padding:8px 0}

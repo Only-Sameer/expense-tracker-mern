@@ -36,10 +36,57 @@
         }
       })();
     </script>
+      <style>
+      html,body{min-height:100%;margin:0;background:#0F172A;color:#F8FAFC;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+      #budgetry-boot{min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;background:#0F172A;color:#F8FAFC}
+      #budgetry-boot .boot-brand{display:flex;align-items:center;gap:10px;font-size:23px;font-weight:800;letter-spacing:-.04em}
+      #budgetry-boot .boot-logo{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#10B981;color:#052E24;font-size:24px}
+      #budgetry-boot-message{max-width:540px;margin:0;color:#CBD5E1;font-size:16px;line-height:1.6}
+      #budgetry-boot .boot-progress{width:min(280px,80vw);height:6px;overflow:hidden;border-radius:999px;background:#334155}
+      #budgetry-boot .boot-progress span{display:block;width:42%;height:100%;border-radius:inherit;background:#10B981;animation:budgetry-boot-move 1.25s ease-in-out infinite alternate}
+      #budgetry-boot-help{max-width:500px;color:#CBD5E1;font-size:14px;line-height:1.6}
+      #budgetry-boot-reload{min-height:44px;padding:10px 16px;border:1px solid #10B981;border-radius:10px;background:#10B981;color:#052E24;font-size:14px;font-weight:800;cursor:pointer}
+      #budgetry-boot-reload:focus-visible{outline:3px solid #3B82F6;outline-offset:3px}
+      @keyframes budgetry-boot-move{from{transform:translateX(-6%)}to{transform:translateX(150%)}}
+      @media(prefers-reduced-motion:reduce){#budgetry-boot .boot-progress span{animation:none;width:100%}}
+    </style>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <div id="root"></div>
+    <div id="root">
+      <div id="budgetry-boot" role="status" aria-live="polite">
+        <div class="boot-brand"><span class="boot-logo" aria-hidden="true">B</span><span>Budgetry</span></div>
+        <p id="budgetry-boot-message">Getting your workspace ready…</p>
+        <div class="boot-progress" aria-hidden="true"><span></span></div>
+        <div id="budgetry-boot-help" hidden>
+          <p>The app has not finished starting. This can happen if your browser has an outdated copy of the page or a script failed to load.</p>
+          <button id="budgetry-boot-reload" type="button">Reload Budgetry</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        function showProblem(message) {
+          var boot = document.getElementById('budgetry-boot');
+          if (!boot) return; // React has taken over; let the app error boundary handle it.
+          var status = document.getElementById('budgetry-boot-message');
+          var help = document.getElementById('budgetry-boot-help');
+          if (status) status.textContent = message;
+          if (help) help.hidden = false;
+        }
+        window.addEventListener('error', function (event) {
+          if (event.target && event.target.tagName === 'SCRIPT') {
+            showProblem('A Budgetry app file could not be loaded. Reload the page to fetch the latest version.');
+          }
+        });
+        window.setTimeout(function () {
+          showProblem('Budgetry is taking longer than expected to load.');
+        }, 12000);
+        document.addEventListener('click', function (event) {
+          if (event.target && event.target.id === 'budgetry-boot-reload') window.location.reload();
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

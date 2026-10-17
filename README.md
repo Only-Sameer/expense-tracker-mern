@@ -114,6 +114,10 @@ Requires Node.js **20.19+** (or 22.12+) and a reachable MongoDB database.
    ```
 5. Open http://localhost:5173. Production uses Render environment variables; never add real credentials to a committed `.env` file.
 
+## Blank-page recovery and asset caching
+
+The HTML shell displays a styled boot state before React starts. If an app script fails to load or startup takes more than 12 seconds, the visitor sees a reload action instead of an empty background. A React error boundary catches synchronous render failures and offers a recovery action without exposing stack traces. Render static-site response headers revalidate `/` and `/index.html` while caching hashed `/assets/*` bundles for a year. The frontend and API service names in `render.yaml` are aligned with the existing Render services; if your Render project is not configured to sync the Blueprint automatically, use the same header rules under the static site’s Settings → Headers.
+
 ## Health and Render cold starts
 
 - `GET /health` returns HTTP 200 when MongoDB is connected and HTTP 503 otherwise. `GET /api/health` remains available for compatibility.
