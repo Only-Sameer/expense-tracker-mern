@@ -231,7 +231,13 @@ export function distributedRateLimit({ prefix, max = 30, windowSeconds = 900, ke
         return res.status(429).json({ error: 'Too many requests. Please wait a little before trying again.' });
       }
       return next();
-    } catch {
+    } catch (error) {
+      // Safe diagnostics only: never log request bodies, emails, keys, or credentials.
+      console.error('Authentication rate-limit counter failed.', {
+        errorName: error?.name || 'UnknownError',
+        errorCode: typeof error?.code === 'string' || typeof error?.code === 'number' ? error.code : undefined,
+        mongoCodeName: typeof error?.codeName === 'string' ? error.codeName : undefined,
+      });
       return res.status(503).json({ error: 'Authentication protections are temporarily unavailable. Please try again shortly.' });
     }
   };
