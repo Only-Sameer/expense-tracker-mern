@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api } from './api.js';
-import { Header } from './components/BudgetryUI.jsx';
+import Header from './components/Header.jsx';
 import { useScrollProgress, useTheme } from './hooks.js';
 
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
