@@ -1,27 +1,32 @@
-# Self-review / known limitations
+# Self-review: verified status and known limitations
 
-This code has not been run against a live MongoDB instance or browser automation in this generation environment. Do not interpret source review as a passed production test.
+Last reviewed: 17 October 2026.
 
-1. **Cross-origin cookies:** Render and Vercel can be cross-site. `SameSite=Lax` may not send the cookie cross-site. Configure `COOKIE_SAME_SITE=none`, `COOKIE_SECURE=true` only if the browser deployment requires it, and carefully test CORS, Origin validation, and third-party-cookie restrictions. Prefer same-site custom domains.
-2. **CSRF / origin:** unsafe methods require an exact Origin. Requests from clients that omit Origin will fail, intentionally. If multiple trusted origins are needed, implement an explicit allowlist rather than broad CORS.
-3. **Rate limits:** authentication routes share a basic IP-based limiter. Behind a reverse proxy, configure Express `trust proxy` correctly or limits may be ineffective / overly broad.
-4. **Contrast:** contrast table is a token-level estimate; verify actual component states against WCAG 2.2 AA before launch.
-5. **Cookie preference UI:** no non-essential trackers exist. “Manage preferences” records a choice but does not expose category toggles. Add granular controls if optional technologies are introduced.
-6. **Back-to-top:** visibility now toggles after 300px of scroll and respects reduced motion; manually verify threshold behavior on mobile and with smooth scrolling.
-7. **Search:** expense search currently searches only note fields; site search only covers a few policy pages. It does not search category/date/amount or arbitrary page body text.
-8. **Date handling:** date-only inputs are now validated as real calendar dates; filters and grouping use UTC boundaries and row display formats the stored date in UTC. Still test across time zones.
-9. **Data deletion:** app database user and expenses are deleted. Database backups, hosting logs, and backups outside the app are governed by provider retention and must be documented.
-10. **Production ops:** add structured logging with sensitive-field redaction, monitoring/alerts, backup/restore tests, database least-privilege credentials, deployment health checks, and incident response process.
-11. **Dependency audit:** install dependencies, commit lockfiles, run `npm audit`, and review maintenance/release notes before production. Dependency versions are ranges and are not a substitute for lockfiles.
-12. **Accessibility:** the mobile menu's focus trap is basic. Consent dialog does not currently trap focus or restore focus. Validate all dialogs, labels, table navigation, chart alternative, zoom, 320px viewport, and screen-reader announcements with axe and assistive technology.
-13. **Account deletion:** browser confirmation dialog is not a custom accessible dialog, but native `window.confirm` is broadly supported. Confirm error and double-click behavior manually.
-14. **Exports:** JSON export includes the current account's records; CSV is all records. Exports contain sensitive personal finance information and should be stored carefully.
-15. **Legal:** privacy/terms/cookie content is template language. Confirm applicable DPDP Act rules/commencement, grievance contact, hosting providers, retention periods, age rules, governing law, and required notices with counsel.
-16. **SEO:** basic title/description/OG metadata, favicon and robots file are included; no OG image, sitemap, canonical URL, or route-specific metadata.
-17. **Security:** no email verification, password reset, account recovery, MFA, or session revocation list. JWT sessions remain valid until expiry unless the signing secret changes. Consider short access sessions/refresh strategy and revocation for higher-risk deployments.
-18. **Password byte length:** bcrypt only processes up to 72 UTF-8 bytes; server and client now reject longer UTF-8 passwords even where character count is within the nominal field limit.
-19. **Potential code issues to verify:** validate MongoDB regex escaping, Vite build, Express route behavior, and chart responsiveness by running the provided commands and manual checklist. Integration tests should be added before production.
+## Verified from repository and service metadata
 
-20. **Dependency versions reviewed (2026-10-17):** package manifests now pin `vite@8.3.4` and `@vitejs/plugin-react@6.1.2` (Vite's current supported release line is 8.3), `react@19.3.1` / `react-dom@19.3.1`, `react-router-dom@7.18.3`, `recharts@3.10.1` plus matching `react-is@19.3.1`, `express@5.3.0`, `express-rate-limit@8.7.0`, `helmet@8.3.0`, `mongoose@9.10.3`, and `zod@4.6.5`. Reference pages checked: Vite release support (https://vite.dev/releases), Mongoose version support (https://mongoosejs.com/docs/version-support.html), and the package release pages for React, React Router, Recharts, Express, Zod, Helmet, and express-rate-limit. Registry installation/build and an automated dependency vulnerability audit could not be completed here; version presence/maintainer status is not a substitute for `npm audit` or compatibility tests.
-21. **Lockfile:** `package-lock.json` has not been generated because `npm install` timed out while contacting the package registry. Generate and commit it before production release so transitive dependencies are reproducible.
-22. **Chart accessibility and themes:** the chart tooltip uses theme tokens and an adjacent screen-reader-only monthly data table is included as an alternative to the SVG visualization. Browser and assistive-technology verification is still required.
+- The latest main commit on the review pass was deployed by Render; both the frontend static site and backend API reported status live.
+- GitHub Actions CI for the reviewed main commit completed successfully. CI installs from the package lockfile, runs the server and client helper tests, and builds the production frontend.
+- The API defines both /health and /api/health. They return HTTP 200 when MongoDB is connected and 503 when it is not.
+- The authenticated API uses bcrypt password hashes, an HttpOnly cookie, session-version checks, exact Origin validation on unsafe methods, request validation, an authentication rate limiter, and user-scoped expense queries.
+- Anonymous demo entries are generated in browser memory. Demo add/edit/import/delete actions do not write to the database.
+- CSV import validates the file and shows a preview before batch save; server validation limits an import to 250 records and validates all rows before insertMany.
+- The app has a PWA manifest, favicon, social-share SVG artwork, an illustrative landing-page dashboard preview, and a scheduled GitHub Actions health ping.
+
+## Limitations that still need testing or configuration
+
+1. **Browser end-to-end and Lighthouse:** CI passing is not a browser test. No real Chromium end-to-end run, full Lighthouse audit, axe scan, or screen-reader review was performed in this review. Do not claim a Lighthouse 90+ score until it is measured on the live website.
+2. **Email delivery:** Email verification and password reset are implemented using Resend, but work only if both RESEND_API_KEY and EMAIL_FROM are configured in Render and the sender/domain is verified. That configuration and real inbox delivery were not confirmed here.
+3. **Budget/category preferences:** Monthly budgets, custom category definitions/colours, and parts of the recurring UI state are browser-local preferences. They do not yet synchronize across browsers/devices. Expense records and recurring rules are stored server-side.
+4. **Recurring timing:** Recurring rules are materialized on the next authenticated request to /api/recurring on or after the due date. This is idempotent per rule/month, but it is not a clock-triggered worker; if nobody opens the app, the entry waits until the next dashboard load.
+5. **Large histories:** The dashboard fetches query-paginated records in batches to compute global summary totals and filter across the full list. For very large accounts, add summary aggregation endpoints and server-side search/filtering rather than loading every page.
+6. **CSV import:** Validation and preview are implemented, and the server validates the batch before writing. Duplicate rows within a file are highlighted/countable, but comparison against previously saved expenses is not a complete duplicate-detection system.
+7. **Time zones:** Calendar date helpers preserve ISO date prefixes when grouping/displaying expenses. Still manually test dates around month boundaries on devices configured in different time zones.
+8. **Accessibility:** CSS tokens have calculated contrast ratios and visible focus styling; this is not proof that every chart, tinted category badge, modal, disabled state, and hover/focus state passes WCAG 2.2 AA. Verify with a rendered-page contrast tool, axe, and keyboard/screen-reader tests.
+9. **Cache headers:** Static-asset caching rules can be configured with Render custom headers or through a static-site Blueprint. The existing live static service's actual response headers were not retrieved during this review. Confirm Cache-Control in browser DevTools or curl after configuring it.
+10. **OG artwork:** The Open Graph artwork is SVG with a 1200 × 630 viewBox. Some third-party social previews prefer PNG/JPEG; generate a raster fallback if a target service does not display SVG.
+11. **Account deletion and retention:** The API deletes the user, related expense documents, recurring rules, and auth tokens. Database backups and infrastructure/security logs follow provider retention settings and are not necessarily removed immediately.
+12. **Operations:** Add structured request logs with sensitive-field redaction, uptime alerts, backup/restore drills, and a written incident contact before using this as a real financial service. The current application is a portfolio expense tracker, not a regulated banking product.
+
+## Dependency/security housekeeping
+
+The repository includes a package lockfile and CI. Continue reviewing dependencies with npm audit and update intentionally rather than blindly. Do not put MongoDB credentials, JWT secrets, or the Resend key in committed .env files; keep production values in Render environment variables. For a production release, confirm MongoDB network allowlisting and database-user least privilege.

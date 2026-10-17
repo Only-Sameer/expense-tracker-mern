@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   budgetTone, createDemoExpenses, csvCell, filterExpenseRecords,
-  money, parseCsv, sumAmounts, monthKey
+  money, parseCsv, sumAmounts, monthKey, formatDate
 } from './finance.js';
 
 test('INR formatting uses Indian digit grouping', () => {
@@ -53,4 +53,10 @@ test('demo data is 60 varied expenses distributed over six months', () => {
   assert.ok(new Set(expenses.map(item => item.category)).size >= 6);
   assert.equal(new Set(expenses.map(item => monthKey(item.date))).size, 6);
   assert.ok(expenses.every(item => Number(item.amount) > 0 && item.note.length > 0));
+});
+
+
+test('ISO expense calendar dates display consistently without timezone day-shifts', () => {
+  assert.equal(formatDate('2026-10-17T00:00:00.000Z'), '17 Oct 2026');
+  assert.equal(formatDate('2026-10-17'), '17 Oct 2026');
 });

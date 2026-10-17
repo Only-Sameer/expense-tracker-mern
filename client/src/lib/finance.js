@@ -27,7 +27,18 @@ export const dayKey = item => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
 };
-export const formatDate = value => { const d = new Date(value); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); };
+export const formatDate = value => {
+  // Expense dates are calendar dates, not moments. Preserve the ISO calendar day
+  // before formatting so time zones cannot display a record as the previous day.
+  let d;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+    d = new Date(year, month - 1, day);
+  } else {
+    d = new Date(value);
+  }
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 export const displayCategory = c => c === 'Housing' ? 'Rent' : c;
 export const serverCategory = c => c === 'Rent' ? 'Housing' : c;
 export const itemId = item => String(item?._id || item?.id || '');

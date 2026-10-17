@@ -1,44 +1,35 @@
-# Contrast review
+# Contrast review — Budgetry theme tokens
 
-Ratios below are calculated from the WCAG 2.x sRGB relative-luminance formula and rounded to two decimals. They cover primary theme token combinations, not every browser-composited state or chart-tooltip component. Verify actual rendered controls in axe/contrast tooling before launch.
+This table recalculates contrast ratios using the current CSS theme tokens with the WCAG 2.x sRGB relative-luminance formula. Text uses the 4.5:1 AA target; visible component boundaries use the 3:1 non-text target where that boundary is needed to identify a control.
 
-| Theme | Foreground | Background | Ratio | Purpose / target |
+| Theme / use | Foreground | Background | Ratio | Result |
 |---|---|---|---:|---|
-| Light | `#172033` | `#f7f8fc` | 15.33:1 | Normal text; AA pass |
-| Light | `#172033` | `#ffffff` | 16.27:1 | Normal text; AA pass |
-| Light | `#526079` | `#f7f8fc` | 5.98:1 | Normal text; AA pass |
-| Light | `#526079` | `#ffffff` | 6.35:1 | Normal text; AA pass |
-| Light | `#ffffff` | `#285fce` | 5.80:1 | Normal text on primary button; AA pass |
-| Light | `#285fce` | `#ffffff` | 5.80:1 | Link on surface; AA pass |
-| Light | `#808ca3` | `#ffffff` | 3.39:1 | Non-text UI boundary; AA pass |
-| Light | `#808ca3` | `#f7f8fc` | 3.19:1 | Non-text UI boundary; AA pass |
-| Dark | `#f2f5fb` | `#111827` | 16.24:1 | Normal text; AA pass |
-| Dark | `#f2f5fb` | `#1c2638` | 13.90:1 | Normal text; AA pass |
-| Dark | `#c0cada` | `#111827` | 10.73:1 | Normal text; AA pass |
-| Dark | `#c0cada` | `#1c2638` | 9.18:1 | Normal text; AA pass |
-| Dark | `#101827` | `#8db4ff` | 8.55:1 | Normal text on primary button; AA pass |
-| Dark | `#8db4ff` | `#1c2638` | 7.30:1 | Link on surface; AA pass |
-| Dark | `#64728a` | `#1c2638` | 3.12:1 | Non-text UI boundary; AA pass |
-| Dark | `#64728a` | `#111827` | 3.65:1 | Non-text UI boundary; AA pass |
-| Light | `#172033` | `#eef2f9` | 14.49:1 | Primary text on hover/category surface; AA pass |
-| Light | `#526079` | `#eef2f9` | 5.65:1 | Muted text on hover/category surface; AA pass |
-| Light | `#285fce` | `#f7f8fc` | 5.47:1 | Links on page background; AA pass |
-| Light | `#1e4da8` | `#ffffff` | 7.83:1 | Hovered links/buttons; AA pass |
-| Light | `#176b45` | `#f7f8fc` | 6.13:1 | Success text on page background; AA pass |
-| Light | `#b42318` | `#f7f8fc` | 6.19:1 | Error/destructive text on page background; AA pass |
-| Dark | `#f2f5fb` | `#273449` | 11.49:1 | Primary text on hover/category surface; AA pass |
-| Dark | `#c0cada` | `#273449` | 7.59:1 | Muted text on hover/category surface; AA pass |
-| Dark | `#8db4ff` | `#111827` | 8.54:1 | Links on page background; AA pass |
-| Dark | `#b0cbff` | `#1c2638` | 9.27:1 | Hovered links on surface; AA pass |
-| Dark | `#8be0b6` | `#111827` | 11.35:1 | Success text on page background; AA pass |
-| Dark | `#ff9b91` | `#111827` | 8.74:1 | Error/destructive text on page background; AA pass |
-| Dark | `#101827` | `#ff9b91` | 8.76:1 | Dark destructive-button foreground; AA pass |
-| Light | `#ffffff` | `#1e4da8` | 7.83:1 | Primary button hover; AA pass |
-| Light | `#b42318` | `#fff0ee` | 5.93:1 | Error text on error background; AA pass |
-| Light | `#176b45` | `#ffffff` | 6.51:1 | Success text on surface; AA pass |
-| Dark | `#101827` | `#b0cbff` | 10.86:1 | Primary button hover; AA pass |
-| Dark | `#101827` | `#ff9b91` | 8.76:1 | Destructive button text; AA pass |
-| Dark | `#ff9b91` | `#1c2638` | 7.48:1 | Error text on dark surface; AA pass |
-| Dark | `#8be0b6` | `#1c2638` | 9.71:1 | Success text on dark surface; AA pass |
+| Light primary text | #0F172A | #F8FAFC | 17.06:1 | AA |
+| Light primary text on cards | #0F172A | #FFFFFF | 17.85:1 | AA |
+| Light muted text | #475569 | #F8FAFC | 7.24:1 | AA |
+| Light muted text on fields | #475569 | #F1F5F9 | 6.92:1 | AA |
+| Light emerald accent | #047857 | #F8FAFC | 5.24:1 | AA |
+| Light blue accent | #1D4ED8 | #FFFFFF | 6.70:1 | AA |
+| Light warning text | #B45309 | #FFFFFF | 5.02:1 | AA |
+| Light danger text | #B91C1C | #FEF2F2 | 5.91:1 | AA |
+| Light control border | #7C8BA1 | #F8FAFC | 3.31:1 | Non-text pass |
+| Light control border on card | #7C8BA1 | #FFFFFF | 3.46:1 | Non-text pass |
+| Light control border on input | #7C8BA1 | #F1F5F9 | 3.16:1 | Non-text pass |
+| Dark primary text | #F8FAFC | #0F172A | 17.06:1 | AA |
+| Dark primary text on cards | #F8FAFC | #1E293B | 13.98:1 | AA |
+| Dark muted text | #CBD5E1 | #0F172A | 12.02:1 | AA |
+| Dark muted text on cards | #CBD5E1 | #1E293B | 9.85:1 | AA |
+| Dark muted text on raised controls | #CBD5E1 | #334155 | 6.97:1 | AA |
+| Dark emerald accent | #10B981 | #0F172A | 7.04:1 | AA |
+| Dark emerald accent on cards | #10B981 | #1E293B | 5.77:1 | AA |
+| Dark blue accent | #3B82F6 | #0F172A | 4.85:1 | AA |
+| Dark warning accent | #F59E0B | #0F172A | 8.31:1 | AA |
+| Dark danger accent | #EF4444 | #0F172A | 4.74:1 | AA |
+| Dark control border | #8291A7 | #0F172A | 5.57:1 | Non-text pass |
+| Dark control border on cards | #8291A7 | #1E293B | 4.57:1 | Non-text pass |
+| Dark control border on raised controls | #8291A7 | #334155 | 3.23:1 | Non-text pass |
+| Text on emerald primary button | #052E24 | #10B981 | 5.82:1 | AA |
 
-**Caveat:** this is a color-token audit, not proof that every rendered state meets WCAG 2.2 AA. Native form controls, chart gridlines/tooltips, disabled states, focus rings, error/success text, overlay dimming, and all hover/focus states must be checked visually and with a contrast checker.
+## Scope and remaining checks
+
+The light theme uses a darker border than the previous revision, and the dark theme uses a lighter border so form fields and card boundaries remain visible against their surfaces. These values are token-level calculations, not a claim that every browser-rendered component has passed WCAG 2.2 AA. Tinted category badges, disabled controls, custom-category colours, charts, tooltip states, focus indicators, overlay contrast, and actual hover/focus states still need browser-based checking with a contrast tool and axe. Charts include textual labels/legends, but a manual assistive-technology test is still needed.

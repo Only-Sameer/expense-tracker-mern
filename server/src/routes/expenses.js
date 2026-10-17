@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import Expense from '../models/Expense.js';
+import RecurringExpense from '../models/RecurringExpense.js';
 import { requireAuth } from '../middleware/auth.js';
 import { expenseSchema, expenseQuerySchema, expenseImportSchema, categoryRenameSchema } from '../validation/schemas.js';
 
@@ -64,12 +65,24 @@ router.get('/csv', asyncHandler(async (req, res) => {
 }));
 router.patch('/categories/rename', asyncHandler(async (req, res) => {
   const data = categoryRenameSchema.parse(req.body);
-  const result = await Expense.updateMany(
-    { user: req.user._id, category: data.from },
-    { $set: { category: data.to } },
-    { runValidators: true },
-  );
-  res.json({ from: data.from, to: data.to, modifiedCount: result.modifiedCount });
+  const [result, recurringResult] = await Promise.all([
+    Expense.updateMany(
+      { user: req.user._id, category: data.from },
+      { $set: { category: data.to } },
+      { runValidators: true },
+    ),
+    RecurringExpense.updateMany(
+      { user: req.user._id, category: data.from },
+      { $set: { category: data.to } },
+      { runValidators: true },
+    ),
+  ]);
+  res.json({
+    from: data.from,
+    to: data.to,
+    modifiedCount: result.modifiedCount,
+    recurringModifiedCount: recurringResult.modifiedCount,
+  });
 }));
 router.post('/import', asyncHandler(async (req, res) => {
   // Validate the entire import before writing any row, avoiding partial per-row imports.

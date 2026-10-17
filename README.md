@@ -18,7 +18,7 @@ Social-share artwork: `client/public/og-image.svg` (1200 × 630).
 - Monthly summary cards, annual spending bar chart, category breakdown, insights, search, category/date filters, sort, and pagination.
 - Add/edit expenses with INR amounts, eight core categories, date, notes (maximum 300 characters), and inline validation.
 - CSV and JSON export, CSV import with validation and a preview/confirmation step, and account deletion behind a typed confirmation.
-- Category budgets and custom categories. Budget values and custom-category colours are local to the current browser; a category rename updates matching saved expenses.
+- Category budgets and custom categories. Budget values and custom-category colours are local to the current browser; a category rename updates matching saved expenses and recurring rules.
 - Recurring rules stored in MongoDB. When a signed-in user loads the dashboard, the API creates due entries at most once per rule per calendar month.
 - Responsive mobile navigation, keyboard shortcuts (`N` to add and `/` to focus search), visible focus styles, reduced-motion support, light/dark themes.
 - Anonymous demo mode loads 60 sample expenses across six months in browser memory. Reset it from the demo banner. It is intentionally **not a shared demo account**: demo edits/imports/deletes are not sent to the API and cannot change another visitor's data.

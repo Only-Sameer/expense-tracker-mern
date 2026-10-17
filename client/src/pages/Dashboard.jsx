@@ -91,10 +91,10 @@ export default function Dashboard({ user, setUser, onThemeToggle, theme }) {
       if(ix.date<0||ix.amount<0||ix.category<0)throw new Error('CSV needs Date, Amount, and Category columns.');
       const parsed=rows.slice(1).map((row,i)=>{
         const date=String(row[ix.date]||'').trim().slice(0,10);
-        const amount=Number(String(row[ix.amount]||'').replace(/[₹,\\s]/g,''));
+        const amount=Number(String(row[ix.amount]||'').replace(/[₹,\s]/g,''));
         const category=displayCategory(String(row[ix.category]||'').trim());
         const dt=new Date(date+'T12:00:00');
-        if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||Number.isNaN(dt.getTime())||dt.toISOString().slice(0,10)!==date)throw new Error('Row '+(i+2)+': use a valid YYYY-MM-DD date.');
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(dt.getTime())||dt.toISOString().slice(0,10)!==date)throw new Error('Row '+(i+2)+': use a valid YYYY-MM-DD date.');
         if(!Number.isFinite(amount)||amount<=0)throw new Error('Row '+(i+2)+': amount must be greater than zero.');
         if(!allCategories.includes(category))throw new Error('Row '+(i+2)+': unknown category "'+category+'".');
         return {date,amount,category:serverCategory(category),note:String(row[ix.note]||'').trim().slice(0,300)};
@@ -146,6 +146,7 @@ export default function Dashboard({ user, setUser, onThemeToggle, theme }) {
           if(result.modifiedCount===0)setToast('Category renamed. No existing transactions used the old name.');
         }
       }
+      setRecurring(items=>items.map(item=>displayCategory(item.category)===oldName?{...item,category:name}:item));
       delete META[oldName];META[name]={icon:'◆',color};
       setCustomCategories(items=>items.map(item=>item.name===oldName?{name,color}:item));
       setBudgets(items=>{const next={...items};if(oldName!==name&&Object.hasOwn(next,oldName)){if(!Object.hasOwn(next,name))next[name]=next[oldName];delete next[oldName];}return next;});

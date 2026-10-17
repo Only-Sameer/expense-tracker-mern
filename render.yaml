@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: pocketledger-api
+    name: budgetry-api
     runtime: node
     rootDir: server
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,4 +20,8 @@ services:
       - key: CLIENT_ORIGIN
         sync: false
       - key: ADMIN_EMAILS
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
         sync: false
