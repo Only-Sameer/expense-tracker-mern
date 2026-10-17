@@ -36,7 +36,7 @@ async function mongoIncrement(key, windowSeconds) {
       value: { $toString: nextCount },
       expiresAt: { $cond: [live, '$expiresAt', newExpiry] },
     } }],
-    { upsert: true, new: true },
+    { upsert: true, new: true, updatePipeline: true },
     ).lean();
   } catch (error) {
     if (error?.code === 11000) return mongoIncrement(key, windowSeconds);
