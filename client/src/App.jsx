@@ -8,11 +8,15 @@ const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const Legal = lazy(() => import('./pages/Legal.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
 const AdminDashboard = lazy(() => import('./pages/Admin.jsx'));
+const Recovery = lazy(() => import('./pages/Recovery.jsx'));
 
 export default function App() {
   const [theme, toggleTheme] = useTheme();
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
+  const [serverMessage, setServerMessage] = useState('Waking up the server…');
+  const [startupError, setStartupError] = useState('');
   const [cookieChoice, setCookieChoice] = useState(() => {
     try { return JSON.parse(localStorage.getItem('expense-cookie-consent') || 'null'); } catch { return null; }
   });
@@ -22,7 +26,12 @@ export default function App() {
   const progress = useScrollProgress();
 
   useEffect(() => {
-    api('/auth/me').then(data => setUser(data.user)).catch(() => setUser(null)).finally(() => setAuthChecked(true));
+    const onServerState = event => { setServerWaking(Boolean(event.detail?.active)); if (event.detail?.message) setServerMessage(event.detail.message); };
+    window.addEventListener('budgetry:server-state', onServerState);
+    return () => window.removeEventListener('budgetry:server-state', onServerState);
+  }, []);
+  useEffect(() => {
+    api('/auth/me').then(data => { setUser(data.user); setStartupError(''); }).catch(error => { setUser(null); if (error.status !== 401) setStartupError(error.message || 'Could not connect to the server.'); }).finally(() => setAuthChecked(true));
   }, []);
   useEffect(() => {
     let frame = 0;
@@ -40,13 +49,22 @@ export default function App() {
   return <>
     <div className="scroll-progress" aria-hidden="true" style={{ transform: `scaleX(${progress / 100})` }} />
     <Header user={user} theme={theme} onThemeToggle={toggleTheme} onLogout={logout} />
+    {(authChecked && (serverWaking || startupError)) && <div className="server-waking-banner" role="status" aria-live="polite">
+      <span className={serverWaking ? 'spinner spinner-small' : 'server-status-dot'} aria-hidden="true" />
+      <span>{startupError && !serverWaking ? startupError : serverMessage}</span>
+      <button type="button" className="text-action" onClick={async () => { setStartupError(''); try { const data = await api('/auth/me'); setUser(data.user); } catch (error) { setUser(null); if (error.status !== 401) setStartupError(error.message || 'Could not connect to the server.'); } }}>Try again</button>
+    </div>}
     <main id="main" tabIndex="-1">
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>
-          <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} onThemeToggle={toggleTheme} theme={theme} /> : <div className="page-loader" role="status"><span className="spinner" />Checking session…</div>} />
+          <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} onThemeToggle={toggleTheme} theme={theme} /> : <div className="server-waking-state" role="status" aria-live="polite"><span className="spinner" /><h1>{serverWaking ? 'Waking up the server…' : 'Connecting to Budgetry…'}</h1><p>{serverWaking ? 'The service may be starting after a quiet period. We are retrying safely. Please hang tight.' : 'Checking your session and preparing your dashboard.'}</p><div className="waking-progress" aria-hidden="true"><span /></div></div>} />
           <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login?next=%2Fadmin&admin=1'} replace />} />
           <Route path="/login" element={<Auth mode="login" setUser={setUser} />} />
           <Route path="/signup" element={<Auth mode="signup" setUser={setUser} />} />
+          <Route path="/forgot-password" element={<Recovery mode="forgot" />} />
+          <Route path="/reset-password" element={<Recovery mode="reset" />} />
+          <Route path="/verification-request" element={<Recovery mode="verification-request" />} />
+          <Route path="/verify-email" element={<Recovery mode="verify" setUser={setUser} />} />
           <Route path="/privacy" element={<Legal page="privacy" />} />
           <Route path="/terms" element={<Legal page="terms" />} />
           <Route path="/cookies" element={<Legal page="cookies" />} />

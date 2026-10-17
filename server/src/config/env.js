@@ -12,6 +12,9 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   // Comma-separated email allowlist for the administrative dashboard.
   ADMIN_EMAILS: z.string().default(''),
+  // Optional transactional email settings. If enabled, use a verified sender domain in Resend.
+  RESEND_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().default(''),
 });
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
@@ -20,6 +23,10 @@ if (!parsed.success) {
 }
 if (parsed.data.COOKIE_SAME_SITE === 'none' && parsed.data.COOKIE_SECURE !== 'true') {
   console.error('COOKIE_SAME_SITE=none requires COOKIE_SECURE=true');
+  process.exit(1);
+}
+if (Boolean(parsed.data.RESEND_API_KEY) !== Boolean(parsed.data.EMAIL_FROM)) {
+  console.error('RESEND_API_KEY and EMAIL_FROM must either both be configured or both be empty.');
   process.exit(1);
 }
 export const env = parsed.data;

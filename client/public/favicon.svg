@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#25e3a6"/><stop offset="1" stop-color="#078a62"/></linearGradient></defs><rect width="64" height="64" rx="17" fill="#070a0d"/><path d="M16 12h18c17 0 20 17 7 21 14 4 11 19-5 19H16z" fill="url(#g)"/><path d="M25 21h8c5 0 6 5 1 7l-9 4zm0 17c9-6 16-5 16 1 0 4-3 5-8 5h-8z" fill="#0b1414"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="t">
+<title id="t">Budgetry</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
+<rect width="128" height="128" rx="28" fill="#0F172A"/>
+<path d="M27 23h38c31 0 42 30 15 43 30 12 17 40-12 40H27z" fill="url(#g)"/>
+<path d="M43 38h20c13 0 15 14 4 20l-24 12zM43 77c17-11 31-12 35-2 4 9-2 17-16 17H43z" fill="#0F172A"/>
+<path d="M79 91V69h10V51h10V34h10v57z" fill="#E2E8F0" opacity=".9"/>
+</svg>

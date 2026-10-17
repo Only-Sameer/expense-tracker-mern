@@ -1,0 +1,15 @@
+{
+  "name": "Budgetry — Know where your money goes",
+  "short_name": "Budgetry",
+  "description": "Track spending, understand trends, and plan monthly budgets.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

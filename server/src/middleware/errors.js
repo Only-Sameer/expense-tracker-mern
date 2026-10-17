@@ -10,6 +10,9 @@ export function errorHandler(err, req, res, next) {
   if (err?.code === 11000) return res.status(409).json({ error: 'An account with that email already exists.' });
   if (err?.name === 'ValidationError' || err?.name === 'CastError') return res.status(400).json({ error: 'Submitted data is invalid.' });
   if (err?.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });
+  if (Number.isInteger(err?.status) && err.status >= 400 && err.status < 600) {
+    return res.status(err.status).json({ error: err.message || 'Request could not be completed.' });
+  }
   console.error('Request error:', err);
   res.status(500).json({ error: 'Something went wrong. Please try again.' });
 }

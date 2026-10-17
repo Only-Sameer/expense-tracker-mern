@@ -1,0 +1,18 @@
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { money } from '../lib/finance.js';
+import { EmptyState } from './BudgetryUI.jsx';
+
+export function SpendingChart({ data, year, onYearChange, onAdd }) {
+  return <section className="surface-card chart-card"><div className="card-heading"><div><p className="section-kicker">CASH FLOW</p><h2>Monthly spending</h2><p className="muted">Your spending, month by month</p></div>
+    <label className="select-label">Year <select aria-label="Select chart year" value={year} onChange={e => onYearChange(Number(e.target.value))}>{Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map(y => <option key={y}>{y}</option>)}</select></label></div>
+    {data.some(x => x.amount > 0) ? <div className="chart-area"><ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{ top: 12, right: 6, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} /><XAxis dataKey="month" tick={{ fill: 'var(--muted)', fontSize: 12 }} axisLine={false} tickLine={false} /><YAxis tickFormatter={v => v >= 1000 ? '₹' + Math.round(v / 1000) + 'k' : '₹' + v} tick={{ fill: 'var(--muted)', fontSize: 12 }} axisLine={false} tickLine={false} width={54} /><Tooltip formatter={v => [money(v), 'Spent']} labelStyle={{ color: 'var(--text)' }} contentStyle={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)' }} /><Bar dataKey="amount" name="Spent" fill="#10B981" radius={[6,6,0,0]} maxBarSize={34} /></BarChart></ResponsiveContainer></div> : <EmptyState compact title={'No spending recorded for '+year+' yet.'} description="Add an expense to see your trend here." onAdd={onAdd} />}
+  </section>;
+}
+export function CategoryDonut({ data, onAdd }) {
+  const dataPresent = data.some(x => x.amount > 0);
+  return <section className="surface-card donut-card"><div className="card-heading"><div><p className="section-kicker">WHERE IT GOES</p><h2>Spending by category</h2><p className="muted">This selected month</p></div></div>
+    {dataPresent ? <div className="donut-layout"><div className="donut-visual"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data} dataKey="amount" nameKey="category" innerRadius="62%" outerRadius="86%" paddingAngle={3} stroke="none">{data.map(x => <Cell key={x.category} fill={x.color} />)}</Pie><Tooltip formatter={value => money(value)} contentStyle={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)' }} /></PieChart></ResponsiveContainer><div className="donut-center"><strong>{money(data.reduce((sum, x) => sum + x.amount, 0))}</strong><span>total spent</span></div></div>
+      <div className="donut-legend">{[...data].sort((a,b)=>b.amount-a.amount).slice(0,8).map(x=><div className="legend-row" key={x.category}><span className="legend-dot" style={{background:x.color}} /><span className="legend-name">{x.category}</span><strong>{money(x.amount)}</strong></div>)}</div></div> : <EmptyState compact title="Your category breakdown will appear here." description="Add expenses to spot patterns." onAdd={onAdd} />}
+  </section>;
+}
+export

@@ -14,6 +14,7 @@ export default function Auth({ mode, setUser }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -22,13 +23,14 @@ export default function Auth({ mode, setUser }) {
   const nextPath = rawNext?.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : '/';
   async function submit(event) {
     event.preventDefault(); if (loading) return;
-    setError(''); setSuccess(false);
+    setError(''); setSuccess(false); setSuccessMessage('');
     const result = schema.safeParse({ ...form, name: signup ? form.name : undefined });
     if (!result.success) { setError(result.error.issues[0].message); return; }
     setLoading(true);
     try {
       const data = await api(`/auth/${signup ? 'signup' : 'login'}`, { method: 'POST', body: JSON.stringify(result.data) });
-      setUser(data.user); setSuccess(true); navigate(nextPath === '/admin' && !data.user.isAdmin ? '/' : nextPath);
+      if (data.verificationRequired) { setSuccess(true); setSuccessMessage(data.message); return; }
+      setUser(data.user); setSuccess(true); setSuccessMessage('Signed in successfully.'); navigate(nextPath === '/admin' && !data.user.isAdmin ? '/' : nextPath);
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
   return <section className="auth-layout"><div className="auth-copy"><span className="eyebrow">{adminLogin ? 'RESTRICTED ADMIN ACCESS' : 'YOUR MONEY, CLEARER'}</span><h1>{adminLogin ? 'Sign in to the admin portal.' : signup ? 'Build better money habits.' : 'Welcome back.'}</h1><p>{adminLogin ? 'Use the account approved for administrator access. Regular accounts cannot view the admin dashboard.' : 'Keep track of everyday spending, spot monthly patterns, and stay in control of your data.'}</p><ul><li>Private, account-based expense records</li><li>Monthly summaries and CSV export</li><li>No advertising or analytics trackers</li></ul></div>
@@ -37,8 +39,9 @@ export default function Auth({ mode, setUser }) {
       <div className="field"><label htmlFor="email">Email</label><input id="email" type="email" autoComplete="email" value={form.email} maxLength={254} onChange={e => setForm({ ...form, email: e.target.value })} aria-describedby={error ? 'auth-error' : undefined} required /></div>
       <div className="field"><label htmlFor="password">Password</label><input id="password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} value={form.password} maxLength={128} onChange={e => setForm({ ...form, password: e.target.value })} aria-describedby={error ? 'auth-error' : 'password-hint'} required /><small id="password-hint" className="muted">{signup ? 'Use at least 10 characters.' : 'Enter your account password.'}</small></div>
       {error && <p className="form-error" id="auth-error" role="alert">{error}</p>}
-      {success && <p className="form-success" role="status">Success.</p>}
+      {success && <p className="form-success" role="status">{successMessage || 'Success.'}</p>}
       <button className="button button-primary button-full" disabled={loading}>{loading ? <><span className="spinner spinner-small" />Working…</> : signup ? 'Create account' : 'Sign in'}</button>
+      {!signup && <p className="auth-switch"><Link to="/forgot-password">Forgot password?</Link> · <Link to="/verification-request">Resend verification email</Link></p>}
       <p className="auth-switch">{signup ? 'Already registered?' : 'New here?'} <Link to={signup ? '/login' : '/signup'}>{signup ? 'Sign in' : 'Create an account'}</Link></p>
     </form>
   </section>;

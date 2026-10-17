@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import Expense from '../models/Expense.js';
 import { requireAuth } from '../middleware/auth.js';
-import { expenseSchema, expenseQuerySchema } from '../validation/schemas.js';
+import { expenseSchema, expenseQuerySchema, expenseImportSchema, categoryRenameSchema } from '../validation/schemas.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -61,6 +61,22 @@ router.get('/csv', asyncHandler(async (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="expenses.csv"');
   res.send('\uFEFF' + csv);
+}));
+router.patch('/categories/rename', asyncHandler(async (req, res) => {
+  const data = categoryRenameSchema.parse(req.body);
+  const result = await Expense.updateMany(
+    { user: req.user._id, category: data.from },
+    { $set: { category: data.to } },
+    { runValidators: true },
+  );
+  res.json({ from: data.from, to: data.to, modifiedCount: result.modifiedCount });
+}));
+router.post('/import', asyncHandler(async (req, res) => {
+  // Validate the entire import before writing any row, avoiding partial per-row imports.
+  const data = expenseImportSchema.parse(req.body);
+  const records = data.items.map(item => ({ ...item, date: new Date(item.date), user: req.user._id }));
+  const items = await Expense.insertMany(records, { ordered: true });
+  res.status(201).json({ items });
 }));
 router.post('/', asyncHandler(async (req, res) => {
   const data = expenseSchema.parse(req.body);

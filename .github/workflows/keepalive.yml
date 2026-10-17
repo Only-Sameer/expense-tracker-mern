@@ -1,0 +1,18 @@
+name: Keep Budgetry health endpoint warm
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Check API health
+        run: |
+          curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 20 \
+            --retry 2 --retry-delay 3 \
+            https://only-sameer-expense-tracker-api.onrender.com/health

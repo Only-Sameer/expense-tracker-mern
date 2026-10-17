@@ -9,10 +9,24 @@ export const META = {
 export const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
 export const money = n => INR.format(Number(n) || 0);
 export const today = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-export const monthKey = v => { const d = new Date(v); return Number.isNaN(d.getTime()) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+export const monthKey = value => {
+  // Preserve the calendar date stored by the API instead of shifting UTC midnight
+  // into the previous day/month for users in negative-offset time zones.
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4}-\d{2})/);
+    if (match) return match[1];
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+};
 export const shiftMonth = (key, n) => { const p = key.split('-').map(Number); const d = new Date(p[0], p[1] - 1 + n, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
 export const monthLabel = key => { const p = key.split('-').map(Number); return new Date(p[0], p[1] - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }); };
-export const dayKey = item => { const d = new Date(item.date); return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10); };
+export const dayKey = item => {
+  const value = item?.date;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+};
 export const formatDate = value => { const d = new Date(value); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); };
 export const displayCategory = c => c === 'Housing' ? 'Rent' : c;
 export const serverCategory = c => c === 'Rent' ? 'Housing' : c;
@@ -71,4 +85,42 @@ export function parseCsv(input) {
   }
   row.push(field); if (row.some(x => x.trim())) rows.push(row);
   return rows;
+}
+
+
+/** Pure helpers shared by the UI and unit tests. */
+export function sumAmounts(items = []) {
+  return items.reduce((sum, item) => sum + Number(item?.amount || 0), 0);
+}
+
+export function budgetTone(spent, limit) {
+  if (!(Number(limit) > 0)) return 'under';
+  const ratio = Number(spent || 0) / Number(limit);
+  if (ratio >= 1) return 'over';
+  if (ratio >= 0.8) return 'warning';
+  return 'under';
+}
+
+export function filterExpenseRecords(items = [], options = {}) {
+  const query = String(options.query || '').trim().toLowerCase();
+  const category = options.category || 'All';
+  const from = options.from || '';
+  const to = options.to || '';
+  const sort = options.sort || 'date_desc';
+  return items.filter(item => {
+    const itemCategory = displayCategory(item.category);
+    if (query && !String(item.note || '').toLowerCase().includes(query) &&
+        !itemCategory.toLowerCase().includes(query)) return false;
+    if (category !== 'All' && itemCategory !== category) return false;
+    const date = dayKey(item);
+    if (from && date < from) return false;
+    if (to && date > to) return false;
+    return true;
+  }).sort((a, b) => {
+    if (sort === 'amount_asc') return Number(a.amount) - Number(b.amount);
+    if (sort === 'amount_desc') return Number(b.amount) - Number(a.amount);
+    return sort === 'date_asc'
+      ? new Date(a.date) - new Date(b.date)
+      : new Date(b.date) - new Date(a.date);
+  });
 }

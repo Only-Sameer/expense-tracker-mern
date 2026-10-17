@@ -6,9 +6,10 @@ test('signup normalizes email and rejects short passwords', () => {
   assert.equal(signupSchema.parse({ name: ' Ada ', email: 'ADA@example.com', password: 'long-password' }).email, 'ada@example.com');
   assert.throws(() => signupSchema.parse({ name: 'Ada', email: 'ada@example.com', password: 'short' }));
 });
-test('expense schema rejects unsupported categories and non-positive amounts', () => {
+test('expense schema rejects non-positive amounts and unsafe category text', () => {
   assert.throws(() => expenseSchema.parse({ amount: 0, category: 'Food', date: '2026-01-01', note: '' }));
-  assert.throws(() => expenseSchema.parse({ amount: 3, category: 'MadeUp', date: '2026-01-01', note: '' }));
+  assert.doesNotThrow(() => expenseSchema.parse({ amount: 3, category: 'Home & utilities', date: '2026-01-01', note: '' }));
+  assert.throws(() => expenseSchema.parse({ amount: 3, category: '<script>alert(1)</script>', date: '2026-01-01', note: '' }));
 });
 
 test('expense dates accept real calendar days and reject impossible dates', () => {
