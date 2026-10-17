@@ -237,6 +237,10 @@ export function distributedRateLimit({ prefix, max = 30, windowSeconds = 900, ke
         errorName: error?.name || 'UnknownError',
         errorCode: typeof error?.code === 'string' || typeof error?.code === 'number' ? error.code : undefined,
         mongoCodeName: typeof error?.codeName === 'string' ? error.codeName : undefined,
+        // Include the operation failure reason while redacting URI-style credentials.
+        errorMessage: String(error?.message || 'No error message')
+          .replace(/(mongodb(?:\+srv)?:\/\/)[^\s/@]+:[^\s/@]+@/gi, '$1[REDACTED]@')
+          .slice(0, 240),
       });
       return res.status(503).json({ error: 'Authentication protections are temporarily unavailable. Please try again shortly.' });
     }
