@@ -34,6 +34,8 @@ flowchart LR
 
 Run it from the repository root:
 
+Create a root-level `.env` file (Git-ignored) with a fresh random `JWT_SECRET` of at least 32 characters; do not reuse the production secret. Compose deliberately refuses to start without it. Then run:
+
 ~~~bash
 docker compose up --build
 ~~~

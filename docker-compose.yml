@@ -30,7 +30,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       MONGODB_URI: mongodb://mongo:27017/expense_tracker
-      JWT_SECRET: ${JWT_SECRET:-local-only-change-this-secret-before-any-shared-use-123456}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the private root .env file before starting Compose}
       CLIENT_ORIGIN: http://localhost:8080
       COOKIE_SECURE: "false"
       COOKIE_SAME_SITE: lax

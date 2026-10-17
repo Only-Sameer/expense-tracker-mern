@@ -103,6 +103,8 @@ Requires Node.js 20.19+ (or Node 22.12+) and MongoDB.
 
 You can run the isolated load-balanced stack with Docker Compose:
 
+Create a root-level `.env` file (already Git-ignored) containing a fresh random `JWT_SECRET` of at least 32 characters. Do not reuse the production secret. Then run:
+
 ~~~bash
 docker compose up --build
 ~~~
