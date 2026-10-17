@@ -73,7 +73,7 @@ export default function App() {
   return <>
     <div className="scroll-progress" aria-hidden="true" style={{ transform: `scaleX(${progress / 100})` }} />
     <header className="site-header">
-      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.svg" alt="" className="brand-logo" /><span className="sr-only">Budgetry</span></Link>
+      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.webp" alt="" className="brand-logo" /><span className="sr-only">Budgetry</span></Link>
       <nav className="desktop-nav" aria-label="Main navigation">
         {user ? <NavLink to="/">Dashboard</NavLink> : <NavLink to="/">Home</NavLink>}
         {user?.isAdmin ? <NavLink to="/admin">Admin console</NavLink> : !user && <NavLink to="/admin">Admin sign in</NavLink>}
