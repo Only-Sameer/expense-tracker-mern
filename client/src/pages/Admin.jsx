@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   return <section className="dashboard-wrap admin-wrap">
     <div className="dashboard-heading admin-heading">
       <div>
-        <span className="eyebrow">POCKETLEDGER / ADMIN</span>
+        <span className="eyebrow">BUDGETRY / ADMIN</span>
         <h1>Admin overview</h1>
         <p className="muted">Manage visibility into account activity and platform health.</p>
       </div>

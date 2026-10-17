@@ -9,6 +9,8 @@ const blank = () => ({ amount: '', category: 'Food', date: new Date().toISOStrin
 const money = n => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n || 0);
 export default function Dashboard({ user, setUser }) {
   const location = useLocation(); const navigate = useNavigate();
+  const [demoBudget, setDemoBudget] = useState(30000);
+  const demoSpend = 18750;
   const params = new URLSearchParams(location.search);
   const [expenses, setExpenses] = useState([]); const [summary, setSummary] = useState([]);
   const [total, setTotal] = useState(0); const [pages, setPages] = useState(1); const [page, setPage] = useState(1);
@@ -73,14 +75,43 @@ export default function Dashboard({ user, setUser }) {
     catch (e) { setError(e.message); }
   }
   async function exportData() {
-    try { const data = await api('/auth/export'); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'pocketledger-data.json'; a.click(); URL.revokeObjectURL(url); setFeedback('Data export downloaded.'); }
+    try { const data = await api('/auth/export'); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'budgetry-data.json'; a.click(); URL.revokeObjectURL(url); setFeedback('Data export downloaded.'); }
     catch (e) { setError(e.message); }
   }
   async function deleteAccount() {
     try { await api('/auth/account', { method: 'DELETE' }); setUser(null); navigate('/'); }
     catch (e) { setError(e.message); }
   }
-  if (!user) return <section className="hero"><span className="eyebrow">POCKETLEDGER</span><h1>Your spending, <span>in perspective.</span></h1><p>A simple place to record expenses, understand monthly trends, and export your data whenever you need it.</p><div className="hero-actions"><a className="button button-primary" href="/signup">Create free account</a><a className="button button-secondary" href="/login">Sign in</a></div><div className="feature-grid"><article className="panel"><h2>Know where it goes</h2><p>Group expenses by category and date.</p></article><article className="panel"><h2>See the bigger picture</h2><p>Review monthly totals with a clear chart.</p></article><article className="panel"><h2>Your data stays yours</h2><p>Export records or delete your account.</p></article></div></section>;
+  if (!user) return <div className="home-shell">
+    <section className="home-hero"><div className="home-copy">
+      <span className="eyebrow">A FRESH LOOK AT YOUR FINANCES</span><h1>Make every rupee <span>count.</span></h1>
+      <p>Budgetry turns everyday spending into a clearer picture. Track expenses, spot patterns, and make your next money decision with confidence.</p>
+      <div className="hero-actions"><Link className="button button-primary" to="/signup">Start tracking free <span aria-hidden="true">↗</span></Link><Link className="button button-secondary" to="/login">Sign in</Link></div>
+      <div className="home-proof"><span><i aria-hidden="true">✓</i> Simple expense tracking</span><span><i aria-hidden="true">✓</i> Export when you need it</span><span><i aria-hidden="true">✓</i> No ad trackers</span></div>
+    </div>
+    <div className="home-visual" aria-label="Interactive sample monthly budget"><div className="orbit orbit-one" aria-hidden="true"></div><div className="orbit orbit-two" aria-hidden="true"></div>
+      <article className="panel budget-preview-card"><div className="preview-card-top"><span className="preview-dot" aria-hidden="true"></span><span className="muted">SAMPLE MONTHLY BUDGET</span><span className="preview-spark" aria-hidden="true">✳</span></div>
+        <small className="muted">Your monthly limit</small><strong className="preview-budget">₹{demoBudget.toLocaleString('en-IN')}</strong>
+        <label className="budget-slider-label" htmlFor="demo-budget">Try adjusting your budget</label><input id="demo-budget" className="budget-slider" type="range" min="10000" max="100000" step="5000" value={demoBudget} onChange={event => setDemoBudget(Number(event.target.value))} />
+        <div className="budget-progress-labels"><span>Spent ₹{demoSpend.toLocaleString('en-IN')}</span><span>Left ₹{Math.max(0,demoBudget-demoSpend).toLocaleString('en-IN')}</span></div>
+        <div className="budget-track" role="img" aria-label={(Math.round(demoSpend/demoBudget*100)) + ' percent of sample budget spent'}><span style={{width:(Math.min(100,demoSpend/demoBudget*100))+'%'}}></span></div>
+        <div className="preview-chart-head"><span className="muted">Weekly spending</span><span className="preview-chip">Sample data</span></div>
+        <div className="preview-bars" aria-hidden="true">{[44,68,38,82,57,94,51].map((height,index)=><span key={index} style={{height:height+'%',animationDelay:(index*90)+'ms'}}></span>)}</div>
+        <div className="preview-days" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+      </article>
+      <div className="floating-note floating-note-top"><span className="floating-icon">↗</span><span><small>Money clarity</small><strong>One step at a time</strong></span></div>
+      <div className="floating-note floating-note-bottom"><span className="floating-icon">✓</span><span><small>Your records</small><strong>Stay in your account</strong></span></div>
+    </div></section>
+    <section className="home-section" id="how-it-works"><div className="home-section-heading"><span className="eyebrow">BUILT FOR EVERYDAY LIFE</span><h2>Less guesswork. <span>More control.</span></h2><p>Everything you need to understand your spending, without turning it into a chore.</p></div>
+      <div className="feature-grid home-feature-grid">
+        <article className="panel feature-card"><span className="feature-icon">↗</span><span className="feature-number">01 / TRACK</span><h3>Capture the little things</h3><p>Record amounts, dates, categories, and notes in one clear place. Update an entry whenever life changes.</p><div className="feature-link">A simpler daily habit <span>↗</span></div></article>
+        <article className="panel feature-card"><span className="feature-icon">▥</span><span className="feature-number">02 / UNDERSTAND</span><h3>See where money goes</h3><p>Use monthly charts, categories, and search to discover patterns that can get lost in a list of transactions.</p><div className="feature-link">Make trends visible <span>↗</span></div></article>
+        <article className="panel feature-card"><span className="feature-icon">⌁</span><span className="feature-number">03 / OWN</span><h3>Your data, your choice</h3><p>Export your records to keep a copy, manage your account, and delete your data from the application when you choose.</p><div className="feature-link">Privacy-minded by design <span>↗</span></div></article>
+      </div>
+    </section>
+    <section className="home-cta"><div><span className="eyebrow">YOUR MONEY, YOUR PACE</span><h2>Build a clearer picture of your spending.</h2><p>Start with what you spend today. Your insights grow as you keep going.</p></div><Link className="button button-primary" to="/signup">Create your account <span aria-hidden="true">→</span></Link></section>
+    <section className="home-disclaimer"><span aria-hidden="true">✳</span><p>Budgetry is an expense-tracking tool, not financial, investment, tax, or legal advice. The chart above uses sample values so you can try the budget control before signing up.</p></section>
+  </div>;
   return <section className="dashboard-wrap">
     <div className="dashboard-heading"><div><span className="eyebrow">YOUR OVERVIEW</span><h1>Hello, {user.name}</h1><p className="muted">A clearer view of your day-to-day spending.</p></div><button className="button button-secondary" onClick={exportCsv}>Export CSV</button></div>
     <div className="stats-grid"><article className="panel stat"><span className="muted">Matching expenses</span><strong>{total}</strong><small>Based on current filters</small></article><article className="panel stat"><span className="muted">Visible page total</span><strong>{money(visibleTotal)}</strong><small>Current page only</small></article><article className="panel stat"><span className="muted">Expense categories</span><strong>{new Set(expenses.map(e => e.category)).size}</strong><small>On this page</small></article></div>

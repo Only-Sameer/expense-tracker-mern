@@ -1,6 +1,6 @@
-# Expense Tracker (MERN)
+# Budgetry — Expense Tracker
 
-A privacy-conscious, accessible MERN expense tracker. Requires Node.js 20.19+ or 22.12+, and MongoDB 7+ (local or hosted).
+Budgetry is a privacy-conscious, accessible MERN expense tracker. Requires Node.js 20.19+ or 22.12+, and MongoDB 7+ (local or hosted).
 
 ## Quick start
 1. Copy `server/.env.example` to `server/.env` and set `MONGODB_URI`, `JWT_SECRET` (32+ random bytes), `CLIENT_ORIGIN`, and `COOKIE_SECURE` (`false` for local HTTP).
@@ -16,7 +16,7 @@ Use separate deployed origins only with careful cookie/CORS configuration. For V
 - From `server`: `npm run dev`, `npm start`, `npm test`.
 - From `client`: `npm run dev`, `npm run build`, `npm run preview`.
 
-## Admin dashboard
+## Budgetry admin dashboard
 
 The optional admin view is available at `/admin` after signing in with an email included in the server-side `ADMIN_EMAILS` environment variable. Set it in `server/.env` for local development and in Render's backend Environment settings for production. It accepts a comma-separated allowlist, for example `ADMIN_EMAILS=owner@example.com,ops@example.com`. An empty allowlist grants no admin access.
 
@@ -35,3 +35,8 @@ Targets the last two stable versions of Chrome, Firefox, Safari, and Edge, plus 
 
 ## Structure
 See `docs/ARCHITECTURE.md` and `docs/REQUIREMENTS.md`.
+
+
+## Branding and legal pages
+
+The web client is branded as Budgetry. Privacy, terms, and cookie information show the latest revision date, operator name, and contact email. They are plain-language product notices, not a substitute for jurisdiction-specific legal advice. Have qualified Indian counsel review them before commercial use or broader public launch.

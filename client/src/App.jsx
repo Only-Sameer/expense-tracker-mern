@@ -59,7 +59,7 @@ export default function App() {
     return () => { document.body.style.overflow = oldOverflow; document.removeEventListener('keydown', keydown); document.removeEventListener('pointerdown', outside); };
   }, [mobileOpen]);
   const saveConsent = choice => {
-    const record = { choice, timestamp: new Date().toISOString(), policyVersion: '1.0' };
+    const record = { choice, timestamp: new Date().toISOString(), policyVersion: '2026-10-17' };
     try { localStorage.setItem('expense-cookie-consent', JSON.stringify(record)); } catch { /* App still works without storage. */ }
     setCookieChoice(record); setCookieSettings(false);
   };
@@ -73,10 +73,10 @@ export default function App() {
   return <>
     <div className="scroll-progress" aria-hidden="true" style={{ transform: `scaleX(${progress / 100})` }} />
     <header className="site-header">
-      <Link className="brand" to="/" aria-label="PocketLedger home"><span className="brand-mark" aria-hidden="true">P</span>PocketLedger</Link>
+      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.svg" alt="" className="brand-logo" /><span className="sr-only">Budgetry</span></Link>
       <nav className="desktop-nav" aria-label="Main navigation">
-        {user && <NavLink to="/">Dashboard</NavLink>}
-        {user?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
+        {user ? <NavLink to="/">Dashboard</NavLink> : <NavLink to="/">Home</NavLink>}
+        {user?.isAdmin ? <NavLink to="/admin">Admin console</NavLink> : !user && <NavLink to="/admin">Admin sign in</NavLink>}
         <NavLink to="/privacy">Privacy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookies</NavLink>
       </nav>
       <div className="header-actions">
@@ -91,7 +91,7 @@ export default function App() {
         <p className="muted">Search checks your expense notes and site sections after you submit.</p>
       </form>}
       {mobileOpen && <div id="mobile-menu" className="mobile-menu" ref={menuRef} role="dialog" aria-label="Navigation menu">
-        <NavLink to="/">Dashboard</NavLink>{user?.isAdmin && <NavLink to="/admin">Admin dashboard</NavLink>}<NavLink to="/privacy">Privacy Policy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookie Policy</NavLink>
+        <NavLink to="/">{user ? 'Dashboard' : 'Home'}</NavLink>{user?.isAdmin ? <NavLink to="/admin">Admin console</NavLink> : !user && <NavLink to="/admin">Admin sign in</NavLink>}<NavLink to="/privacy">Privacy Policy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookie Policy</NavLink>
         {user ? <button className="button button-quiet" onClick={logout}>Log out</button> : <Link className="button button-primary" to="/login">Sign in</Link>}
       </div>}
     </header>
@@ -99,7 +99,7 @@ export default function App() {
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>
           <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} /> : <div className="page-loader" role="status"><span className="spinner" />Checking session…</div>} />
-          <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login'} replace />} />
+          <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login?next=%2Fadmin&admin=1'} replace />} />
           <Route path="/login" element={<Auth mode="login" setUser={setUser} />} />
           <Route path="/signup" element={<Auth mode="signup" setUser={setUser} />} />
           <Route path="/privacy" element={<Legal page="privacy" />} />
@@ -109,7 +109,7 @@ export default function App() {
         </Routes>
       </Suspense>
     </main>
-    <footer className="site-footer"><span>© {new Date().getFullYear()} PocketLedger</span><div><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookie Policy</Link><button className="text-button" onClick={() => setCookieSettings(true)}>Cookie settings</button></div><small>No advertising or analytics trackers are included.</small></footer>
+    <footer className="site-footer"><span>© {new Date().getFullYear()} Budgetry</span><div><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/cookies">Cookie Policy</Link><button className="text-button" onClick={() => setCookieSettings(true)}>Cookie settings</button></div><small>No advertising or analytics trackers are included.</small></footer>
     {(!cookieChoice || cookieSettings) && <div className="consent-backdrop">
       <section className="consent-panel" role="dialog" aria-modal="true" aria-labelledby="consent-title">
         <h2 id="consent-title">{cookieSettings ? 'Cookie preferences' : 'Your privacy choices'}</h2>
