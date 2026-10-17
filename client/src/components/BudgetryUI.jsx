@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CATEGORIES, META, money, today, dayKey, displayCategory, formatDate, budgetTone } from '../lib/finance.js';
+import { CATEGORIES, META, money, today, dayKey, displayCategory, formatDate, budgetTone, itemId } from '../lib/finance.js';
 
 
 function EmptyIllustration({ compact = false }) {
