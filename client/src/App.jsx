@@ -1,11 +1,12 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { api } from './api.js';
 import { useScrollProgress, useTheme } from './hooks.js';
 
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const Legal = lazy(() => import('./pages/Legal.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
+const AdminDashboard = lazy(() => import('./pages/Admin.jsx'));
 
 export default function App() {
   const [theme, toggleTheme] = useTheme();
@@ -75,6 +76,7 @@ export default function App() {
       <Link className="brand" to="/" aria-label="PocketLedger home"><span className="brand-mark" aria-hidden="true">P</span>PocketLedger</Link>
       <nav className="desktop-nav" aria-label="Main navigation">
         {user && <NavLink to="/">Dashboard</NavLink>}
+        {user?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
         <NavLink to="/privacy">Privacy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookies</NavLink>
       </nav>
       <div className="header-actions">
@@ -89,7 +91,7 @@ export default function App() {
         <p className="muted">Search checks your expense notes and site sections after you submit.</p>
       </form>}
       {mobileOpen && <div id="mobile-menu" className="mobile-menu" ref={menuRef} role="dialog" aria-label="Navigation menu">
-        <NavLink to="/">Dashboard</NavLink><NavLink to="/privacy">Privacy Policy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookie Policy</NavLink>
+        <NavLink to="/">Dashboard</NavLink>{user?.isAdmin && <NavLink to="/admin">Admin dashboard</NavLink>}<NavLink to="/privacy">Privacy Policy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookie Policy</NavLink>
         {user ? <button className="button button-quiet" onClick={logout}>Log out</button> : <Link className="button button-primary" to="/login">Sign in</Link>}
       </div>}
     </header>
@@ -97,6 +99,7 @@ export default function App() {
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>
           <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} /> : <div className="page-loader" role="status"><span className="spinner" />Checking session…</div>} />
+          <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login'} replace />} />
           <Route path="/login" element={<Auth mode="login" setUser={setUser} />} />
           <Route path="/signup" element={<Auth mode="signup" setUser={setUser} />} />
           <Route path="/privacy" element={<Legal page="privacy" />} />

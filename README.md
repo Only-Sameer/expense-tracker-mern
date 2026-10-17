@@ -16,6 +16,12 @@ Use separate deployed origins only with careful cookie/CORS configuration. For V
 - From `server`: `npm run dev`, `npm start`, `npm test`.
 - From `client`: `npm run dev`, `npm run build`, `npm run preview`.
 
+## Admin dashboard
+
+The optional admin view is available at `/admin` after signing in with an email included in the server-side `ADMIN_EMAILS` environment variable. Set it in `server/.env` for local development and in Render's backend Environment settings for production. It accepts a comma-separated allowlist, for example `ADMIN_EMAILS=owner@example.com,ops@example.com`. An empty allowlist grants no admin access.
+
+The API independently protects `/api/admin/*` with authentication and the email allowlist; hiding a frontend link is not the security control. The dashboard shows system-level aggregates and basic account directory fields. It deliberately excludes expense notes and individual transaction descriptions. Review `docs/ADMIN.md` before enabling it for production.
+
 ## Security notes
 - JWT is in an HttpOnly cookie, never localStorage. Cookie-authenticated mutations use Origin checking and SameSite cookies. For production deployments where frontend and API are cross-site, review the deployment cookie mode and CSRF threat model before launch.
 - Set a long random `JWT_SECRET`; never commit `.env`.

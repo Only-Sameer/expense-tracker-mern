@@ -10,6 +10,8 @@ const schema = z.object({
   COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
   COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  // Comma-separated email allowlist for the administrative dashboard.
+  ADMIN_EMAILS: z.string().default(''),
 });
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {

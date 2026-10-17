@@ -19,3 +19,5 @@ services:
         sync: false
       - key: CLIENT_ORIGIN
         sync: false
+      - key: ADMIN_EMAILS
+        sync: false

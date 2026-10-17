@@ -7,6 +7,9 @@ import { rateLimit } from 'express-rate-limit';
 import { env } from './config/env.js';
 import authRoutes from './routes/auth.js';
 import expenseRoutes from './routes/expenses.js';
+import adminRoutes from './routes/admin.js';
+import { requireAuth } from './middleware/auth.js';
+import { requireAdmin } from './middleware/admin.js';
 import { checkOrigin } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errors.js';
 
@@ -29,5 +32,7 @@ app.use('/api/auth/signup', authLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
+// Admin APIs are authenticated and allowlisted server-side; the UI route alone is not security.
+app.use('/api/admin', requireAuth, requireAdmin, adminRoutes);
 app.use(notFound);
 app.use(errorHandler);

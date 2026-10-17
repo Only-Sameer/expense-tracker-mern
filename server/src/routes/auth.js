@@ -8,9 +8,10 @@ import { env } from '../config/env.js';
 import { AUTH_COOKIE, cookieOptions, clearCookieOptions } from '../config/cookies.js';
 import { requireAuth } from '../middleware/auth.js';
 import { signupSchema, loginSchema } from '../validation/schemas.js';
+import { isAdminEmail } from '../security/adminAccess.js';
 
 const router = Router();
-const publicUser = user => ({ id: user._id, name: user.name, email: user.email });
+const publicUser = user => ({ id: user._id, name: user.name, email: user.email, isAdmin: isAdminEmail(user.email, env.ADMIN_EMAILS) });
 function setSession(res, user) {
   const token = jwt.sign({ sub: user._id.toString() }, env.JWT_SECRET, {
     algorithm: 'HS256', expiresIn: env.JWT_EXPIRES_IN,
