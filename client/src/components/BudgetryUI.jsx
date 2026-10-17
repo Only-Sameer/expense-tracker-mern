@@ -36,7 +36,7 @@ export function StatCard({ label, value, caption, icon, tone = 'green', trend })
     <strong className="stat-value">{value}</strong><div className="stat-caption">{trend && <span className={'trend ' + (trend.good ? 'trend-good' : 'trend-bad')}>{trend.good ? '↘' : '↗'} {trend.text}</span>}{caption}</div>
   </article>;
 }
-function ExpenseForm({ initialValue, onClose, onSubmit, submitting, error, clearError, categories = CATEGORIES }) {
+export function ExpenseForm({ initialValue, onClose, onSubmit, submitting, error, clearError, categories = CATEGORIES }) {
   const [form, setForm] = useState(() => initialValue ? ({ amount: String(initialValue.amount ?? ''), category: displayCategory(initialValue.category), date: dayKey(initialValue) || today(), note: initialValue.note || '' }) : ({ amount:'', category:'Food', date:today(), note:'' }));
   const amountRef = useRef(null); const [tried, setTried] = useState(false);
   useEffect(() => { amountRef.current?.focus(); }, []);

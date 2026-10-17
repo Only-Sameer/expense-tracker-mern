@@ -15,4 +15,3 @@ export function CategoryDonut({ data, onAdd }) {
       <div className="donut-legend">{[...data].sort((a,b)=>b.amount-a.amount).slice(0,8).map(x=><div className="legend-row" key={x.category}><span className="legend-dot" style={{background:x.color}} /><span className="legend-name">{x.category}</span><strong>{money(x.amount)}</strong></div>)}</div></div> : <EmptyState compact title="Your category breakdown will appear here." description="Add expenses to spot patterns." onAdd={onAdd} />}
   </section>;
 }
-export
