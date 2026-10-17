@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070a0d" />
+    <meta name="theme-color" content="#0F172A" />
     <meta name="description" content="Track your expenses privately, understand monthly spending, and export your records." />
     <meta property="og:title" content="Budgetry — Expense Tracker" />
-    <meta property="og:description" content="Track expenses, explore monthly spending patterns, and keep control of your data with Budgetry." />
+    <meta property="og:description" content="Budgetry — Know where your money goes. Track everyday spending, understand monthly patterns, and build better money habits." />
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Budgetry — Expense Tracker</title>
@@ -15,7 +15,7 @@
         try {
           var saved = localStorage.getItem('expense-theme');
           var theme = saved === 'light' || saved === 'dark' ? saved :
-            'dark';
+            (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
           document.documentElement.dataset.theme = theme;
         } catch (_) {
           document.documentElement.dataset.theme = 'light';

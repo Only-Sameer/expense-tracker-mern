@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 
 export function useTheme() {
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'light');
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('expense-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch { /* Fall through to system preference. */ }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem('expense-theme', theme); } catch { /* Storage may be disabled. */ }

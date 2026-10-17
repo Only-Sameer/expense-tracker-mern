@@ -13,6 +13,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [cookieChoice, setCookieChoice] = useState(() => {
     try { return JSON.parse(localStorage.getItem('expense-cookie-consent') || 'null'); } catch { return null; }
   });
@@ -35,7 +36,7 @@ export default function App() {
     onScroll();
     return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
   }, []);
-  useEffect(() => { setMobileOpen(false); setSearchOpen(false); }, [location.pathname]);
+  useEffect(() => { setMobileOpen(false); setSearchOpen(false); setProfileOpen(false); }, [location.pathname]);
   useEffect(() => {
     if (!mobileOpen) return;
     const prior = document.activeElement;
@@ -73,32 +74,20 @@ export default function App() {
   return <>
     <div className="scroll-progress" aria-hidden="true" style={{ transform: `scaleX(${progress / 100})` }} />
     <header className="site-header">
-      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.webp" alt="" className="brand-logo" /><span className="sr-only">Budgetry</span></Link>
-      <nav className="desktop-nav" aria-label="Main navigation">
-        {user ? <NavLink to="/">Dashboard</NavLink> : <NavLink to="/">Home</NavLink>}
-        {user?.isAdmin ? <NavLink to="/admin">Admin console</NavLink> : !user && <NavLink to="/admin">Admin sign in</NavLink>}
-        <NavLink to="/privacy">Privacy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookies</NavLink>
-      </nav>
+      <Link className="brand" to="/" aria-label="Budgetry home"><img src="/budgetry-logo.webp" alt="Budgetry" className="brand-logo" /><span className="sr-only">Know where your money goes.</span></Link>
+      <div className="header-tagline">Know where your money goes.</div>
       <div className="header-actions">
-        <button className="icon-button" onClick={() => setSearchOpen(v => !v)} aria-label="Open site search" aria-expanded={searchOpen}>⌕</button>
-        <button className="icon-button" onClick={toggleTheme} aria-label="Dark mode" aria-pressed={theme === 'dark'}>{theme === 'dark' ? '☀' : '☾'}</button>
-        {user ? <button className="button button-quiet desktop-only" onClick={logout}>Log out</button> : <Link className="button button-primary desktop-only" to="/login">Sign in</Link>}
-        <button className="icon-button menu-toggle" aria-label="Open navigation menu" aria-expanded={mobileOpen} aria-controls="mobile-menu" onClick={() => setMobileOpen(v => !v)}>☰</button>
+        <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} aria-pressed={theme === 'dark'}>{theme === 'dark' ? '☀' : '☾'}</button>
+        {user ? <div className="profile-menu-wrap">
+          <button type="button" className="profile-avatar-button" onClick={() => setProfileOpen(value => !value)} aria-label="Open account menu" aria-expanded={profileOpen}><span className="avatar">{(user.name || 'B').slice(0,1).toUpperCase()}</span><span className="profile-name-short">{user.name?.split(' ')[0] || 'Account'}</span><span aria-hidden="true">⌄</span></button>
+          {profileOpen && <div className="profile-dropdown" role="menu"><div className="profile-dropdown-user"><strong>{user.name}</strong><span>{user.email}</span></div>{user.isAdmin && <Link role="menuitem" to="/admin" onClick={() => setProfileOpen(false)}>Admin console</Link>}<button type="button" role="menuitem" onClick={() => { setProfileOpen(false); logout(); }}>Log out</button></div>}
+        </div> : <Link className="button button-primary header-signin" to="/login">Sign in</Link>}
       </div>
-      {searchOpen && <form className="global-search" onSubmit={runSearch} role="search">
-        <label htmlFor="global-search">Search pages and expenses</label>
-        <div className="search-line"><input id="global-search" autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Try “food” or “privacy”" /><button type="button" className="button button-quiet" onClick={() => setSearch('')} aria-label="Clear search">Clear</button><button className="button button-primary">Search</button></div>
-        <p className="muted">Search checks your expense notes and site sections after you submit.</p>
-      </form>}
-      {mobileOpen && <div id="mobile-menu" className="mobile-menu" ref={menuRef} role="dialog" aria-label="Navigation menu">
-        <NavLink to="/">{user ? 'Dashboard' : 'Home'}</NavLink>{user?.isAdmin ? <NavLink to="/admin">Admin console</NavLink> : !user && <NavLink to="/admin">Admin sign in</NavLink>}<NavLink to="/privacy">Privacy Policy</NavLink><NavLink to="/terms">Terms</NavLink><NavLink to="/cookies">Cookie Policy</NavLink>
-        {user ? <button className="button button-quiet" onClick={logout}>Log out</button> : <Link className="button button-primary" to="/login">Sign in</Link>}
-      </div>}
     </header>
     <main id="main" tabIndex="-1">
       <Suspense fallback={<div className="page-loader" role="status"><span className="spinner" />Loading page…</div>}>
         <Routes>
-          <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} /> : <div className="page-loader" role="status"><span className="spinner" />Checking session…</div>} />
+          <Route path="/" element={authChecked ? <Dashboard user={user} setUser={setUser} onThemeToggle={toggleTheme} theme={theme} /> : <div className="page-loader" role="status"><span className="spinner" />Checking session…</div>} />
           <Route path="/admin" element={!authChecked ? <div className="page-loader" role="status"><span className="spinner" />Checking session…</div> : user?.isAdmin ? <AdminDashboard /> : <Navigate to={user ? '/' : '/login?next=%2Fadmin&admin=1'} replace />} />
           <Route path="/login" element={<Auth mode="login" setUser={setUser} />} />
           <Route path="/signup" element={<Auth mode="signup" setUser={setUser} />} />
