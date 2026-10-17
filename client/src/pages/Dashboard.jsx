@@ -16,6 +16,8 @@ export default function Dashboard({ user, setUser, onThemeToggle, theme }) {
   const [recurringDraft,setRecurringDraft]=useState({name:'',amount:'',category:'Rent',day:'1'});
   const [customCategories,setCustomCategories]=useState(()=>{try{const items=JSON.parse(localStorage.getItem('budgetry-custom-categories')||'[]');if(!Array.isArray(items))return[];items.forEach(item=>{if(item?.name&&item?.color)META[item.name]={icon:'◆',color:item.color};});return items;}catch{return[];}});
   const [categoryDraft,setCategoryDraft]=useState({name:'',color:'#10B981'});
+  // Controls the CSV review dialog. Keeping the state explicit prevents the dashboard render from referencing an undeclared variable.
+  const [csvPreview,setCsvPreview]=useState(null);
   const isDemo=demoMode&&!user;const activeUser=user||(isDemo?{name:'Alex Morgan',email:'demo@budgetry.app'}:null);
   const allCategories=useMemo(()=>[...new Set([...CATEGORIES,...customCategories.map(x=>x.name),...expenses.map(x=>displayCategory(x.category)).filter(x=>!CATEGORIES.includes(x))])],[customCategories,expenses]);
 
