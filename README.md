@@ -6,7 +6,9 @@ Budgetry is a responsive, privacy-minded expense tracker built as an interview p
 **API health:** https://only-sameer-expense-tracker-api.onrender.com/health  
 **Repository:** https://github.com/Only-Sameer/expense-tracker-mern
 
-![Budgetry dashboard visual preview](client/public/og-image.svg)
+![Budgetry dashboard preview — illustrative sample data](client/public/dashboard-preview.svg)
+
+Social-share artwork: `client/public/og-image.svg` (1200 × 630).
 
 ## Features
 
@@ -50,6 +52,7 @@ client/
     manifest.webmanifest
     pwa-icon.svg
     og-image.svg                 # 1200 × 630 social-card artwork
+    dashboard-preview.svg        # Illustrative landing-page dashboard preview
   src/
     components/
       Header.jsx                 # Header, theme toggle, avatar menu

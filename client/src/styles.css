@@ -405,3 +405,9 @@ small{font-size:12px}
 .server-status-dot{display:inline-block;flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--danger)}
 .server-waking-banner .text-action{flex:0 0 auto}
 @media(max-width:620px){.server-waking-banner{width:calc(100% - 28px);align-items:flex-start;font-size:13px;gap:8px;padding:10px}.server-waking-banner .text-action{padding:4px}}
+
+.public-screenshot{grid-column:1/-1;margin-top:18px;min-width:0}
+.public-screenshot-heading{max-width:720px;margin:0 auto 22px;text-align:center}
+.public-screenshot-heading h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.035em;margin:8px 0}
+.public-screenshot-heading p{font-size:16px;color:var(--muted);margin:0}
+.public-screenshot img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:16px;box-shadow:0 24px 64px rgba(2,6,23,.28);background:var(--surface)}
