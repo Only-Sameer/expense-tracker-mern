@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 180" role="img" aria-labelledby="title">
+<title id="title">Budgetry logo</title>
+<defs><linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16d99a"/><stop offset="1" stop-color="#008e68"/></linearGradient></defs>
+<g transform="translate(12 12)">
+<rect x="4" y="99" width="28" height="49" rx="2" fill="#164656"/><rect x="113" y="8" width="31" height="140" rx="3" fill="#164656"/>
+<path d="M38 25h42c36 0 48 39 17 58 34 17 21 55-13 65H38z" fill="url(#green)"/>
+<path d="M57 44h21c18 0 23 18 7 27-8 4-17 7-28 13 0-13 2-26 0-40z" fill="#0b1a29"/><path d="M57 91c13-9 25-16 35-17 20-1 24 26 4 36-10 5-23 5-39 5z" fill="#0b1a29"/><path d="M63 53c-10 2-17 10-19 20 10-2 18-7 24-14" fill="#13bfb7"/>
+</g><text x="184" y="119" font-size="82" font-family="Inter,Arial,sans-serif" font-weight="800" letter-spacing="-3" fill="#f1f5f9">Budget<tspan fill="#13c987">ry</tspan></text></svg>
