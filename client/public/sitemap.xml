@@ -4,4 +4,5 @@
   <url><loc>https://only-sameer-expense-tracker-web.onrender.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://only-sameer-expense-tracker-web.onrender.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://only-sameer-expense-tracker-web.onrender.com/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://only-sameer-expense-tracker-web.onrender.com/status</loc><changefreq>hourly</changefreq><priority>0.4</priority></url>
 </urlset>

@@ -42,6 +42,10 @@ Open http://localhost:8080. Use docker compose ps, docker compose logs -f api1 a
 
 Nginx uses round-robin upstream selection plus passive max_fails / fail_timeout handling. Compose runs per-container /health checks and starts Nginx after all three API replicas report healthy. OSS Nginx does not provide Nginx Plus-style active upstream health checks; this demo combines container health checks with passive proxy failure handling.
 
+## Session migration note
+
+The previous production release issued access JWTs without server-side session IDs. The hardened middleware intentionally rejects those legacy tokens, so existing users may need to sign in once after this release. Their saved expense records remain in MongoDB; the release does not delete expense data on sign-in renewal.
+
 ## Render scale-out
 
 1. Open the API service in Render Dashboard and use **Compute → Manual Scaling** to choose two or more instances. Render's free plan is single-instance; scaling requires a plan that supports multiple instances.
@@ -113,6 +117,18 @@ The workflow at .github/workflows/backup.yml runs daily at 02:17 UTC and can als
 GitHub artifacts are a short-retention fallback, not a long-term archive. Keep older encrypted copies in a separate encrypted storage location if recovery requirements demand more than seven days. If Atlas offers backups for the current cluster/plan, enable them too; Atlas documents daily M0 snapshots as a separately enabled preview with limited retention, and availability can vary. See [Atlas Free Cluster Backups](https://www.mongodb.com/docs/atlas/backup/cloud-backup/free-cluster-backup/) and [Atlas backup/restore guidance](https://www.mongodb.com/docs/atlas/backup-restore-cluster/).
 
 The manual scripts scripts/backup-mongodb.sh and scripts/restore-mongodb-test.sh require MongoDB Database Tools. They use private file permissions and the restore helper remaps collections into budgetry_restore_test.*; still inspect every URI before running the restore command.
+
+## Cloudflare CDN for a custom domain
+
+Render serves the current `onrender.com` hostname directly. Cloudflare proxy/CDN setup requires a custom domain you own; do not attempt to enable Cloudflare proxying on the Render-owned hostname. Follow [Render's Cloudflare DNS instructions](https://render.com/docs/configure-cloudflare-dns): add the custom domain to the Render service first, point the CNAME to the Render target in DNS-only mode, wait for Render to verify DNS and issue TLS, then optionally enable proxying. Keep Cloudflare SSL/TLS mode at least Full; use Full (strict) when the origin certificate is valid and verified. Remove conflicting AAAA records per Render's current guide.
+
+Add Cloudflare Cache Rules in this order:
+
+1. **Bypass cache** for `/api/*`, `/health`, `/admin*`, `/login*`, `/signup*`, `/forgot-password*`, `/reset-password*`, `/verification-request*`, and `/verify-email*`. Keep credentialed API responses private and bypassed.
+2. **Cache static fingerprinted assets** at `/assets/*`, respecting origin cache-control headers. Render sends `public, max-age=31536000, immutable` for hashed Vite assets.
+3. **Do not force-cache HTML**. Keep the root and `index.html` revalidating (`Cache-Control: no-cache`) so a deployment's new asset manifest is picked up. Never override a response's private/no-store policy for API or authentication paths.
+
+Cloudflare can provide edge Brotli/gzip compression when traffic is proxied; Nginx enables gzip in the local multi-instance demo. Express and static origins can emit ETags by default, but API responses remain `Cache-Control: no-store`. Validate cache headers and CDN HIT/BYPASS behavior in DevTools after DNS changes. See [Cloudflare Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/settings/) and [default cache behavior](https://developers.cloudflare.com/cache/concepts/default-cache-behavior/).
 
 ## Load testing
 

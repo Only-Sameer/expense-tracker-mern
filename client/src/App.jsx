@@ -9,6 +9,7 @@ const Legal = lazy(() => import('./pages/Legal.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
 const AdminDashboard = lazy(() => import('./pages/Admin.jsx'));
 const Recovery = lazy(() => import('./pages/Recovery.jsx'));
+const Status = lazy(() => import('./pages/Status.jsx'));
 
 export default function App() {
   const [theme, toggleTheme] = useTheme();
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="/privacy" element={<Legal page="privacy" />} />
           <Route path="/terms" element={<Legal page="terms" />} />
           <Route path="/cookies" element={<Legal page="cookies" />} />
+          <Route path="/status" element={<Status />} />
           <Route path="*" element={<section className="empty-state"><h1>Page not found</h1><p>That page does not exist.</p><Link className="button button-primary" to="/">Go home</Link></section>} />
         </Routes>
       </Suspense>

@@ -540,3 +540,37 @@ label, legend { font-size: max(13px, 1em); }
   .goal-row-head, .goal-row-bottom { align-items: flex-start; flex-direction: column; }
   .quick-add-bar input { font-size: 14px; }
 }
+
+
+/* Public, privacy-safe service status snapshot. */
+.public-status-link { margin: 16px 0 0; font-size: 13px; }
+.public-status-link a { color: var(--accent); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.public-status-page { width: min(100% - 40px, 940px); margin: 56px auto 88px; display: grid; gap: 24px; }
+.status-heading { max-width: 700px; }
+.status-heading h1 { margin: 10px 0; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.035em; }
+.status-heading p { font-size: 16px; line-height: 1.65; }
+.status-overview-card, .status-note { padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+.status-overview-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.status-overview-row > div { min-width: 0; }
+.status-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 9px; vertical-align: 1px; background: var(--muted); }
+.status-indicator.operational { background: var(--success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 15%, transparent); }
+.status-indicator.outage { background: var(--danger); box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 15%, transparent); }
+.status-indicator.checking { background: var(--warning); }
+.status-state-label { font-size: 20px; }
+.status-overview-row p { line-height: 1.55; }
+.status-components { display: grid; margin-top: 16px; border-top: 1px solid var(--border); }
+.status-component-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 0; border-bottom: 1px solid var(--border); }
+.status-component-row > span { color: var(--muted); }
+.status-component-row > strong { font-size: 14px; text-align: right; overflow-wrap: anywhere; }
+.status-value-ok { color: var(--success); }
+.status-value-error { color: var(--danger); }
+.status-last-checked { margin: 17px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.status-note h2 { margin-top: 0; font-size: 18px; }
+.status-note p { color: var(--muted); line-height: 1.7; margin-bottom: 22px; }
+@media(max-width: 560px) {
+  .public-status-page { width: min(100% - 28px, 940px); margin: 32px auto 64px; }
+  .status-overview-card, .status-note { padding: 18px; }
+  .status-overview-row { flex-direction: column; }
+  .status-overview-row .button { width: 100%; }
+  .status-component-row { align-items: flex-start; }
+}

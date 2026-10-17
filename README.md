@@ -4,6 +4,7 @@ Budgetry is a responsive, privacy-minded expense tracker built as a full-stack p
 
 **Live app:** https://only-sameer-expense-tracker-web.onrender.com  
 **API health:** https://only-sameer-expense-tracker-api.onrender.com/health  
+**Public status snapshot:** https://only-sameer-expense-tracker-web.onrender.com/status  
 **Repository:** https://github.com/Only-Sameer/expense-tracker-mern
 
 ![Budgetry dashboard preview — illustrative sample data](client/public/dashboard-preview.svg)
@@ -129,7 +130,7 @@ No tokens are stored in browser localStorage. Access and refresh credentials use
 - Safe GET requests receive bounded retries and a “Waking up the server…” status. Mutating requests are not blindly retried after a network error, because the result can be ambiguous.
 - GET /health and GET /api/health expose readiness. Health checks inspect MongoDB and, when configured, Redis. Render is configured to use /health for API readiness.
 - GitHub Actions pings /health on a schedule. This is useful as a lightweight probe, not a guarantee of uptime or a substitute for an external monitor and alerting.
-- For a professional public status page, configure an uptime provider independently and monitor the API health URL. No provider account or public status page is silently created by this repository.
+- The public `/status` route shows the latest API/database readiness snapshot and refreshes while open. It is not an independent status service and does not show historical uptime. For independent history and incident alerts, configure an external uptime provider to monitor the API health URL.
 
 ## Performance and cache strategy
 
